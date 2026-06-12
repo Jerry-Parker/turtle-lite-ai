@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 
 import backtrader as bt
 
@@ -44,10 +45,15 @@ def save_json_report(report, output_path="reports/backtest_report.json"):
 
 
 def main():
+    symbol = "SPY"
+
+    if len(sys.argv) > 1:
+        symbol = sys.argv[1].upper()
+
     cerebro = bt.Cerebro()
 
     data = bt.feeds.GenericCSVData(
-        dataname="data/SPY.csv",
+        dataname=f"data/{symbol}.csv",
         dtformat="%Y-%m-%d",
         datetime=0,
         open=1,
@@ -112,7 +118,7 @@ def main():
 
     report = {
         "strategy": "Turtle Lite",
-        "symbol": "SPY",
+        "symbol": symbol,
         "starting_portfolio": round(starting_cash, 2),
         "final_portfolio": round(final_value, 2),
         "net_profit_loss": round(net_profit, 2),

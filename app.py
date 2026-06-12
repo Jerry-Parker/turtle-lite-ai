@@ -18,7 +18,13 @@ st.set_page_config(
 
 st.title("🐢 Turtle Lite AI")
 st.subheader("Educational AI paper-trading strategy demo")
+watchlist = ["SPY", "QQQ", "DIA", "IWM", "AAPL", "MSFT", "NVDA", "AMZN", "META", "GOOGL"]
 
+selected_symbol = st.selectbox(
+    "Choose a symbol to test",
+    watchlist,
+    index=0,
+)
 st.warning(
     "This is an educational backtest only. It is not financial advice. "
     "Past performance does not guarantee future results."
@@ -53,12 +59,12 @@ def load_ai_explanation():
 
 
 if st.button("Run Turtle Lite Demo"):
-    with st.spinner("Downloading data..."):
-        if not run_command("python download_data.py"):
+    with st.spinner(f"Downloading {selected_symbol} data..."):
+        if not run_command(f"python download_data.py {selected_symbol}"):
             st.stop()
 
-    with st.spinner("Running backtest..."):
-        if not run_command("python run_backtest.py"):
+    with st.spinner(f"Running backtest for {selected_symbol}..."):
+        if not run_command(f"python run_backtest.py {selected_symbol}"):
             st.stop()
 
     with st.spinner("Generating AI explanation..."):

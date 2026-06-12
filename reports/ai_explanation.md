@@ -2,27 +2,27 @@
 
 ## 1. Simple Summary
 
-This historical backtest tested the **Turtle Lite** strategy on **SPY**.
+This historical backtest tested the **Turtle Lite** strategy on **GOOGL**.
 
 Over the tested period, the strategy **made money**.
 
-It started with $100,000.00 and finished with $107,507.77.
+It started with $100,000.00 and finished with $112,176.18.
 
-The net result was $7,507.77, or 7.51%.
+The net result was $12,176.18, or 12.18%.
 
 ## 2. Main Numbers
 
 - Starting portfolio: $100,000.00
-- Final portfolio: $107,507.77
-- Net profit/loss: $7,507.77
-- Return: 7.51%
-- Total closed trades: 89
-- Winning trades: 39
-- Losing trades: 50
-- Win rate: 43.82%
-- Profit factor: 1.29
-- Maximum drawdown: 4.89%
-- Maximum money drawdown: $4,949.51
+- Final portfolio: $112,176.18
+- Net profit/loss: $12,176.18
+- Return: 12.18%
+- Total closed trades: 78
+- Winning trades: 38
+- Losing trades: 40
+- Win rate: 48.72%
+- Profit factor: 1.57
+- Maximum drawdown: 5.37%
+- Maximum money drawdown: $5,791.87
 
 ## 3. What This Means
 
@@ -30,7 +30,7 @@ This is a trend-following style system.
 
 Trend-following systems often have a lower win rate than people expect. They can lose many small trades while waiting for a larger trend to develop.
 
-In this backtest, the win rate was 43.82%. That means the system did not win on most trades.
+In this backtest, the win rate was 48.72%. That means the system did not win on most trades.
 
 However, a trend-following system does not need to win every trade. The important question is whether the winners are large enough to pay for the losers.
 
@@ -38,7 +38,7 @@ The average winning trade was larger than the average losing trade. That is a he
 
 ## 4. Risk Review
 
-The maximum drawdown was 4.89%, or about $4,949.51.
+The maximum drawdown was 5.37%, or about $5,791.87.
 
 Drawdown means the account fell from a previous high point before recovering or continuing lower.
 
