@@ -1,4 +1,8 @@
+import json
+import os
+
 import backtrader as bt
+
 from strategies.turtle_lite import TurtleLiteStrategy
 
 
@@ -24,6 +28,19 @@ def format_money(value):
 
 def format_percent(value):
     return f"{value:.2f}%"
+
+
+def save_json_report(report, output_path="reports/backtest_report.json"):
+    """
+    Save the backtest report to a JSON file.
+    This file can later be used by the AI coach or front-end app.
+    """
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+    with open(output_path, "w") as file:
+        json.dump(report, file, indent=2)
+
+    print(f"\nJSON report saved to: {output_path}")
 
 
 def main():
@@ -93,6 +110,33 @@ def main():
     max_drawdown_money = safe_get(drawdown_data, "max", "moneydown")
     sharpe_ratio = safe_get(sharpe_data, "sharperatio", default=None)
 
+    report = {
+        "strategy": "Turtle Lite",
+        "symbol": "SPY",
+        "starting_portfolio": round(starting_cash, 2),
+        "final_portfolio": round(final_value, 2),
+        "net_profit_loss": round(net_profit, 2),
+        "return_percent": round(return_percent, 2),
+        "max_drawdown_percent": round(max_drawdown, 2),
+        "max_money_drawdown": round(max_drawdown_money, 2),
+        "sharpe_ratio": sharpe_ratio,
+        "total_closed_trades": total_trades,
+        "winning_trades": winning_trades,
+        "losing_trades": losing_trades,
+        "win_rate_percent": round(win_rate, 2),
+        "gross_profit": round(gross_profit, 2),
+        "gross_loss": round(gross_loss, 2),
+        "average_win": round(average_win, 2),
+        "average_loss": round(average_loss, 2),
+        "profit_factor": round(profit_factor, 2),
+        "summary": {
+            "profitable": net_profit > 0,
+            "average_winner_larger_than_average_loser": average_win > abs(average_loss),
+            "style": "Trend-following breakout system",
+            "risk_note": "This is a historical backtest only. Past results do not guarantee future performance.",
+        },
+    }
+
     print("\n==============================")
     print("TURTLE LITE BACKTEST REPORT")
     print("==============================")
@@ -136,7 +180,9 @@ def main():
     else:
         print("The average winning trade was not larger than the average losing trade.")
 
-    print("\nBacktest complete.\n")
+    print("\nBacktest complete.")
+
+    save_json_report(report)
 
 
 if __name__ == "__main__":

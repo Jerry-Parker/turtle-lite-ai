@@ -1,0 +1,26 @@
+{
+  "strategy": "Turtle Lite",
+  "symbol": "SPY",
+  "starting_portfolio": 100000.0,
+  "final_portfolio": 107507.77,
+  "net_profit_loss": 7507.77,
+  "return_percent": 7.51,
+  "max_drawdown_percent": 4.89,
+  "max_money_drawdown": 4949.51,
+  "sharpe_ratio": -0.6508320110601444,
+  "total_closed_trades": 89,
+  "winning_trades": 39,
+  "losing_trades": 50,
+  "win_rate_percent": 43.82,
+  "gross_profit": 27693.56,
+  "gross_loss": 21469.72,
+  "average_win": 710.09,
+  "average_loss": -429.39,
+  "profit_factor": 1.29,
+  "summary": {
+    "profitable": true,
+    "average_winner_larger_than_average_loser": true,
+    "style": "Trend-following breakout system",
+    "risk_note": "This is a historical backtest only. Past results do not guarantee future performance."
+  }
+}
