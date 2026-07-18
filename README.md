@@ -48,3 +48,15 @@ This tests predeclared nearby parameters over fixed five-year windows,
 stresses commission and slippage, and shuffles historical trade outcomes to
 estimate losing-sequence risk. It reports every attempted configuration and
 does not automatically replace the baseline with the best backtest.
+
+Run the paper-inspired overfitting diagnostics:
+
+```bash
+python run_pbo_analysis.py
+```
+
+This approximates combinatorially symmetric cross-validation (CSCV) using
+synchronized daily portfolio returns. It reports PBO, IS-to-OOS performance
+degradation, MinTRL, sensitivity to the number of trials, stochastic
+dominance, and bull/bear/high-volatility/low-volatility PBO. Results and plots
+are saved under `reports/pbo/`.
