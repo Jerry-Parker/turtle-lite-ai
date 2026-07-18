@@ -99,6 +99,7 @@ class TurtleLiteStrategyRiskTests(unittest.TestCase):
         exits = self._completed(strategy, "exit")
         self.assertEqual(len(stops), 1)
         self.assertEqual(len(exits), 0)
+        self.assertEqual(strategy.trade_diagnostics[0]["exit_reason"], "atr_stop")
 
     def test_gap_through_stop_uses_open_price(self):
         rows = self._base_rows()
@@ -107,6 +108,8 @@ class TurtleLiteStrategyRiskTests(unittest.TestCase):
         stops = self._completed(strategy, "stop")
         self.assertEqual(len(stops), 1)
         self.assertEqual(stops[0][2], 107.00)
+        self.assertEqual(strategy.trade_diagnostics[0]["exit_price"], 107.00)
+        self.assertGreater(strategy.trade_diagnostics[0]["estimated_slippage"], 0)
 
 
 if __name__ == "__main__":
