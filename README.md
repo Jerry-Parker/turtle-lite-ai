@@ -70,3 +70,14 @@ python run_portfolio_test.py
 This uses the same Turtle parameters for every asset, one shared cash account,
 0.5% risk per trade, and a predeclared 2% total open-risk cap. It does not tune
 parameters or change the strategy defaults.
+
+Run the predeclared macro risk-scaling experiment:
+
+```bash
+python run_macro_experiment.py
+```
+
+The primary comparison uses 0.5% risk when SPY is above its 200-day average
+and VIX is below 25, and 0.25% risk otherwise. It also reports three threshold
+sensitivity checks without selecting a new baseline. Results are saved under
+`reports/macro_risk/`.

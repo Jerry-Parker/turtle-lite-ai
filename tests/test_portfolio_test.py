@@ -51,6 +51,20 @@ class PortfolioTestTests(unittest.TestCase):
         self.assertEqual(report["locked_parameters"]["breakout_period"], 20)
         self.assertEqual(report["locked_parameters"]["initial_stop_atr"], 2.0)
 
+    def test_macro_overlay_uses_only_declared_risk_rates(self):
+        report = run_portfolio(
+            ["SPY"],
+            start_date="2020-04-10",
+            end_date="2021-12-31",
+            use_macro_scaling=True,
+        )
+        self.assertTrue(report["macro_risk_scaling"]["enabled"])
+        self.assertEqual(report["macro_risk_scaling"]["supportive_risk_percent"], 0.5)
+        self.assertEqual(report["macro_risk_scaling"]["weak_risk_percent"], 0.25)
+        self.assertEqual(sum(report["regime_days"].values()), len(report["equity_curve"]))
+        self.assertGreaterEqual(report["average_risk_rate_percent"], 0.25)
+        self.assertLessEqual(report["average_risk_rate_percent"], 0.5)
+
 
 if __name__ == "__main__":
     unittest.main()

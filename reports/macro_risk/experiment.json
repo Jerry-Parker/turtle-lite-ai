@@ -1,0 +1,248 @@
+{
+  "experiment_policy": {
+    "primary_rule_predeclared": "SPY > SMA200 and VIX < 25: 0.5% risk; otherwise 0.25% risk",
+    "selection_policy": "Sensitivity variants are diagnostics only; no winner is selected.",
+    "assets": [
+      "SPY",
+      "QQQ",
+      "AAPL",
+      "GOOGL",
+      "NVDA",
+      "SOL-USD"
+    ],
+    "start_date": "2020-04-10",
+    "end_date": null
+  },
+  "portfolio_results": {
+    "locked_baseline": {
+      "annualized_return_percent": 9.13,
+      "max_drawdown_percent": 6.87,
+      "sharpe_ratio": 1.298,
+      "time_with_any_position_percent": 71.35,
+      "average_capital_invested_percent": 25.56,
+      "average_cash_available_percent": 74.44,
+      "closed_trades": 133,
+      "risk_cap_rejections": 5,
+      "unfilled_entries": 9,
+      "average_risk_rate_percent": 0.5,
+      "regime_days": {
+        "supportive": 2290,
+        "weak": 0
+      },
+      "entries_by_regime": {
+        "supportive": 134,
+        "weak": 0
+      }
+    },
+    "primary_sma200_vix25": {
+      "annualized_return_percent": 8.15,
+      "max_drawdown_percent": 6.91,
+      "sharpe_ratio": 1.26,
+      "time_with_any_position_percent": 71.35,
+      "average_capital_invested_percent": 24.31,
+      "average_cash_available_percent": 75.69,
+      "closed_trades": 135,
+      "risk_cap_rejections": 3,
+      "unfilled_entries": 9,
+      "average_risk_rate_percent": 0.4288,
+      "regime_days": {
+        "supportive": 1638,
+        "weak": 652
+      },
+      "entries_by_regime": {
+        "supportive": 121,
+        "weak": 15
+      }
+    },
+    "sensitivity_sma200_vix20": {
+      "annualized_return_percent": 7.48,
+      "max_drawdown_percent": 7.3,
+      "sharpe_ratio": 1.227,
+      "time_with_any_position_percent": 71.35,
+      "average_capital_invested_percent": 23.25,
+      "average_cash_available_percent": 76.75,
+      "closed_trades": 135,
+      "risk_cap_rejections": 3,
+      "unfilled_entries": 9,
+      "average_risk_rate_percent": 0.3906,
+      "regime_days": {
+        "supportive": 1288,
+        "weak": 1002
+      },
+      "entries_by_regime": {
+        "supportive": 106,
+        "weak": 30
+      }
+    },
+    "sensitivity_sma200_vix30": {
+      "annualized_return_percent": 7.73,
+      "max_drawdown_percent": 6.86,
+      "sharpe_ratio": 1.194,
+      "time_with_any_position_percent": 71.35,
+      "average_capital_invested_percent": 24.87,
+      "average_cash_available_percent": 75.13,
+      "closed_trades": 134,
+      "risk_cap_rejections": 4,
+      "unfilled_entries": 9,
+      "average_risk_rate_percent": 0.4425,
+      "regime_days": {
+        "supportive": 1763,
+        "weak": 527
+      },
+      "entries_by_regime": {
+        "supportive": 127,
+        "weak": 8
+      }
+    },
+    "sensitivity_sma100_vix25": {
+      "annualized_return_percent": 8.22,
+      "max_drawdown_percent": 6.89,
+      "sharpe_ratio": 1.279,
+      "time_with_any_position_percent": 71.35,
+      "average_capital_invested_percent": 24.13,
+      "average_cash_available_percent": 75.87,
+      "closed_trades": 135,
+      "risk_cap_rejections": 3,
+      "unfilled_entries": 9,
+      "average_risk_rate_percent": 0.4269,
+      "regime_days": {
+        "supportive": 1620,
+        "weak": 670
+      },
+      "entries_by_regime": {
+        "supportive": 116,
+        "weak": 20
+      }
+    }
+  },
+  "sol_results": {
+    "locked_baseline": {
+      "annualized_return_percent": 3.49,
+      "max_drawdown_percent": 6.36,
+      "sharpe_ratio": 0.885,
+      "time_with_any_position_percent": 18.91,
+      "average_capital_invested_percent": 1.16,
+      "average_cash_available_percent": 98.84,
+      "closed_trades": 15,
+      "risk_cap_rejections": 0,
+      "unfilled_entries": 0,
+      "average_risk_rate_percent": 0.5,
+      "regime_days": {
+        "supportive": 2290,
+        "weak": 0
+      },
+      "entries_by_regime": {
+        "supportive": 15,
+        "weak": 0
+      }
+    },
+    "primary_sma200_vix25": {
+      "annualized_return_percent": 2.41,
+      "max_drawdown_percent": 4.89,
+      "sharpe_ratio": 0.774,
+      "time_with_any_position_percent": 18.91,
+      "average_capital_invested_percent": 0.93,
+      "average_cash_available_percent": 99.07,
+      "closed_trades": 15,
+      "risk_cap_rejections": 0,
+      "unfilled_entries": 0,
+      "average_risk_rate_percent": 0.4288,
+      "regime_days": {
+        "supportive": 1638,
+        "weak": 652
+      },
+      "entries_by_regime": {
+        "supportive": 13,
+        "weak": 2
+      }
+    },
+    "sensitivity_sma200_vix20": {
+      "annualized_return_percent": 2.41,
+      "max_drawdown_percent": 4.89,
+      "sharpe_ratio": 0.774,
+      "time_with_any_position_percent": 18.91,
+      "average_capital_invested_percent": 0.93,
+      "average_cash_available_percent": 99.07,
+      "closed_trades": 15,
+      "risk_cap_rejections": 0,
+      "unfilled_entries": 0,
+      "average_risk_rate_percent": 0.3906,
+      "regime_days": {
+        "supportive": 1288,
+        "weak": 1002
+      },
+      "entries_by_regime": {
+        "supportive": 13,
+        "weak": 2
+      }
+    },
+    "sensitivity_sma200_vix30": {
+      "annualized_return_percent": 2.41,
+      "max_drawdown_percent": 4.89,
+      "sharpe_ratio": 0.774,
+      "time_with_any_position_percent": 18.91,
+      "average_capital_invested_percent": 0.93,
+      "average_cash_available_percent": 99.07,
+      "closed_trades": 15,
+      "risk_cap_rejections": 0,
+      "unfilled_entries": 0,
+      "average_risk_rate_percent": 0.4425,
+      "regime_days": {
+        "supportive": 1763,
+        "weak": 527
+      },
+      "entries_by_regime": {
+        "supportive": 13,
+        "weak": 2
+      }
+    },
+    "sensitivity_sma100_vix25": {
+      "annualized_return_percent": 2.41,
+      "max_drawdown_percent": 4.89,
+      "sharpe_ratio": 0.774,
+      "time_with_any_position_percent": 18.91,
+      "average_capital_invested_percent": 0.93,
+      "average_cash_available_percent": 99.07,
+      "closed_trades": 15,
+      "risk_cap_rejections": 0,
+      "unfilled_entries": 0,
+      "average_risk_rate_percent": 0.4269,
+      "regime_days": {
+        "supportive": 1620,
+        "weak": 670
+      },
+      "entries_by_regime": {
+        "supportive": 13,
+        "weak": 2
+      }
+    }
+  },
+  "primary_minus_baseline": {
+    "annualized_return_percentage_points": -0.98,
+    "max_drawdown_percentage_points": 0.04,
+    "time_in_market_percentage_points": 0.0,
+    "closed_trades": 2
+  },
+  "portfolio_overlay_pbo": {
+    "pbo": 0.6571,
+    "combinations": 70,
+    "blocks": 8,
+    "observations": 2288,
+    "configurations": 5,
+    "probability_oos_loss": 0.0,
+    "degradation_slope": -0.9812,
+    "degradation_intercept": 2.4676,
+    "is_oos_correlation": -0.9578
+  },
+  "sol_overlay_pbo": {
+    "pbo": 0.1429,
+    "combinations": 70,
+    "blocks": 8,
+    "observations": 2288,
+    "configurations": 5,
+    "probability_oos_loss": 0.2,
+    "degradation_slope": -0.7436,
+    "degradation_intercept": 1.202,
+    "is_oos_correlation": -0.7526
+  }
+}

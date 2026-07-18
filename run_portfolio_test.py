@@ -107,6 +107,13 @@ def run_portfolio(
     start_date="2020-01-01",
     end_date=None,
     portfolio_risk_cap=PORTFOLIO_RISK_CAP,
+    use_macro_scaling=False,
+    regime_symbol="SPY",
+    regime_sma_period=200,
+    vix_symbol="^VIX",
+    vix_threshold=25.0,
+    supportive_risk=RISK_PER_TRADE,
+    weak_risk=RISK_PER_TRADE / 2,
 ):
     market_data = {
         symbol: load_market_data(Path(data_directory) / f"{symbol}.csv")
@@ -125,6 +132,15 @@ def run_portfolio(
     if len(all_dates) < 2:
         raise ValueError("The selected portfolio period has insufficient market data.")
 
+    regime_frame = None
+    vix_frame = None
+    if use_macro_scaling:
+        regime_path = Path(data_directory) / f"{regime_symbol}.csv"
+        vix_path = Path(data_directory) / f"{vix_symbol}.csv"
+        regime_frame = pd.read_csv(regime_path, parse_dates=["Date"]).set_index("Date").sort_index()
+        regime_frame["regime_sma"] = regime_frame["Close"].rolling(regime_sma_period).mean()
+        vix_frame = pd.read_csv(vix_path, parse_dates=["Date"]).set_index("Date").sort_index()
+
     cash = STARTING_CASH
     positions = {}
     pending_entries = {}
@@ -137,8 +153,36 @@ def run_portfolio(
     allocation_risk_percentages = []
     risk_cap_rejections = 0
     unfilled_entries = 0
+    regime_days = {"supportive": 0, "weak": 0}
+    entries_by_regime = {"supportive": 0, "weak": 0}
+    risk_rate_sum = 0.0
+    latest_regime_close = None
+    latest_regime_sma = None
+    latest_vix = None
 
     for current_date in all_dates:
+        if use_macro_scaling:
+            if current_date in regime_frame.index:
+                latest_regime_close = float(regime_frame.at[current_date, "Close"])
+                sma_value = regime_frame.at[current_date, "regime_sma"]
+                latest_regime_sma = None if pd.isna(sma_value) else float(sma_value)
+            if current_date in vix_frame.index:
+                latest_vix = float(vix_frame.at[current_date, "Close"])
+            supportive = (
+                latest_regime_close is not None
+                and latest_regime_sma is not None
+                and latest_vix is not None
+                and latest_regime_close > latest_regime_sma
+                and latest_vix < vix_threshold
+            )
+            current_regime = "supportive" if supportive else "weak"
+            current_risk_rate = supportive_risk if supportive else weak_risk
+        else:
+            current_regime = "supportive"
+            current_risk_rate = RISK_PER_TRADE
+        regime_days[current_regime] += 1
+        risk_rate_sum += current_risk_rate
+
         # Execute exits and stops before new entries on each asset's next bar.
         for symbol in sorted(list(positions)):
             frame = market_data[symbol]
@@ -217,6 +261,7 @@ def run_portfolio(
                 entry_date=current_date.date().isoformat(),
                 committed_risk=size * (fill_price - pending["stop_price"]),
             )
+            entries_by_regime[pending["regime"]] += 1
             allocation_risk_percentages.append(
                 (
                     sum(item.committed_risk for item in positions.values())
@@ -258,7 +303,7 @@ def run_portfolio(
             if not (trend_ok and breakout_ok):
                 continue
             available_risk = current_equity * portfolio_risk_cap - committed - reserved
-            risk_budget = min(current_equity * RISK_PER_TRADE, max(0.0, available_risk))
+            risk_budget = min(current_equity * current_risk_rate, max(0.0, available_risk))
             if risk_budget <= 0:
                 risk_cap_rejections += 1
                 continue
@@ -268,6 +313,7 @@ def run_portfolio(
                 "stop_price": stop_price,
                 "max_entry_price": max_entry_price,
                 "risk_budget": risk_budget,
+                "regime": current_regime,
             }
             reserved += risk_budget
 
@@ -318,6 +364,22 @@ def run_portfolio(
             "portfolio_risk_cap": portfolio_risk_cap,
             "trend_filter": "close > SMA200 and SMA50 > SMA200",
         },
+        "macro_risk_scaling": {
+            "enabled": use_macro_scaling,
+            "regime_symbol": regime_symbol,
+            "regime_sma_period": regime_sma_period,
+            "vix_symbol": vix_symbol,
+            "vix_threshold": vix_threshold,
+            "supportive_risk_percent": supportive_risk * 100,
+            "weak_risk_percent": weak_risk * 100,
+            "rule": (
+                f"supportive when {regime_symbol} > SMA{regime_sma_period} "
+                f"and {vix_symbol} < {vix_threshold:g}; otherwise weak"
+            ),
+        },
+        "regime_days": regime_days,
+        "entries_by_regime": entries_by_regime,
+        "average_risk_rate_percent": round(risk_rate_sum / len(all_dates) * 100, 4),
         "final_value": round(final_value, 2),
         "total_return_percent": round(total_return, 2),
         "annualized_return_percent": round(strategy_cagr, 2),
@@ -337,6 +399,9 @@ def run_portfolio(
         ),
         "average_capital_invested_percent": round(
             np.mean(invested_capital_curve) * 100, 2
+        ),
+        "average_cash_available_percent": round(
+            (1 - np.mean(invested_capital_curve)) * 100, 2
         ),
         "maximum_allocated_entry_risk_percent": round(
             max(allocation_risk_percentages, default=0), 4

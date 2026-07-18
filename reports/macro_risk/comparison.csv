@@ -1,0 +1,6 @@
+configuration,annualized_return_percent,max_drawdown_percent,sharpe_ratio,time_with_any_position_percent,average_capital_invested_percent,average_cash_available_percent,closed_trades,risk_cap_rejections,unfilled_entries,average_risk_rate_percent,regime_days,entries_by_regime
+locked_baseline,9.13,6.87,1.298,71.35,25.56,74.44,133,5,9,0.5,"{'supportive': 2290, 'weak': 0}","{'supportive': 134, 'weak': 0}"
+primary_sma200_vix25,8.15,6.91,1.26,71.35,24.31,75.69,135,3,9,0.4288,"{'supportive': 1638, 'weak': 652}","{'supportive': 121, 'weak': 15}"
+sensitivity_sma200_vix20,7.48,7.3,1.227,71.35,23.25,76.75,135,3,9,0.3906,"{'supportive': 1288, 'weak': 1002}","{'supportive': 106, 'weak': 30}"
+sensitivity_sma200_vix30,7.73,6.86,1.194,71.35,24.87,75.13,134,4,9,0.4425,"{'supportive': 1763, 'weak': 527}","{'supportive': 127, 'weak': 8}"
+sensitivity_sma100_vix25,8.22,6.89,1.279,71.35,24.13,75.87,135,3,9,0.4269,"{'supportive': 1620, 'weak': 670}","{'supportive': 116, 'weak': 20}"
