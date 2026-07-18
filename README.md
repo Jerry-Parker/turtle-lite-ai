@@ -60,3 +60,13 @@ synchronized daily portfolio returns. It reports PBO, IS-to-OOS performance
 degradation, MinTRL, sensitivity to the number of trials, stochastic
 dominance, and bull/bear/high-volatility/low-volatility PBO. Results and plots
 are saved under `reports/pbo/`.
+
+Run the locked-baseline shared portfolio test:
+
+```bash
+python run_portfolio_test.py
+```
+
+This uses the same Turtle parameters for every asset, one shared cash account,
+0.5% risk per trade, and a predeclared 2% total open-risk cap. It does not tune
+parameters or change the strategy defaults.

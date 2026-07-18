@@ -1,0 +1,45 @@
+{
+  "portfolio": [
+    "SPY",
+    "QQQ",
+    "AAPL",
+    "GOOGL",
+    "NVDA"
+  ],
+  "start_date": "2005-01-03",
+  "end_date": "2026-06-11",
+  "locked_parameters": {
+    "breakout_period": 20,
+    "exit_period": 10,
+    "atr_period": 14,
+    "risk_per_trade": 0.005,
+    "initial_stop_atr": 2.0,
+    "entry_buffer_atr": 0.5,
+    "portfolio_risk_cap": 0.02,
+    "trend_filter": "close > SMA200 and SMA50 > SMA200"
+  },
+  "final_value": 205671.22,
+  "total_return_percent": 105.67,
+  "annualized_return_percent": 3.42,
+  "max_drawdown_percent": 10.61,
+  "annualized_return_to_drawdown": 0.32,
+  "sharpe_ratio": 0.626,
+  "benchmark_total_return_percent": 27879.76,
+  "benchmark_annualized_return_percent": 30.06,
+  "benchmark_max_drawdown_percent": 65.98,
+  "benchmark_annualized_return_to_drawdown": 0.46,
+  "time_with_any_position_percent": 65.72,
+  "average_capital_invested_percent": 27.35,
+  "maximum_allocated_entry_risk_percent": 2.0,
+  "maximum_marked_open_risk_percent": 2.0324,
+  "closed_trades": 399,
+  "risk_cap_rejections": 2,
+  "unfilled_entries": 15,
+  "trades_by_symbol": {
+    "SPY": 91,
+    "QQQ": 81,
+    "AAPL": 73,
+    "GOOGL": 82,
+    "NVDA": 72
+  }
+}

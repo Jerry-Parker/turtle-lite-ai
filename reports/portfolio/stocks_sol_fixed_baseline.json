@@ -1,0 +1,47 @@
+{
+  "portfolio": [
+    "SPY",
+    "QQQ",
+    "AAPL",
+    "GOOGL",
+    "NVDA",
+    "SOL-USD"
+  ],
+  "start_date": "2020-04-10",
+  "end_date": "2026-07-17",
+  "locked_parameters": {
+    "breakout_period": 20,
+    "exit_period": 10,
+    "atr_period": 14,
+    "risk_per_trade": 0.005,
+    "initial_stop_atr": 2.0,
+    "entry_buffer_atr": 0.5,
+    "portfolio_risk_cap": 0.02,
+    "trend_filter": "close > SMA200 and SMA50 > SMA200"
+  },
+  "final_value": 172915.76,
+  "total_return_percent": 72.92,
+  "annualized_return_percent": 9.13,
+  "max_drawdown_percent": 6.87,
+  "annualized_return_to_drawdown": 1.33,
+  "sharpe_ratio": 1.298,
+  "benchmark_total_return_percent": 1994.79,
+  "benchmark_annualized_return_percent": 62.48,
+  "benchmark_max_drawdown_percent": 93.6,
+  "benchmark_annualized_return_to_drawdown": 0.67,
+  "time_with_any_position_percent": 71.35,
+  "average_capital_invested_percent": 25.56,
+  "maximum_allocated_entry_risk_percent": 1.9999,
+  "maximum_marked_open_risk_percent": 2.0348,
+  "closed_trades": 133,
+  "risk_cap_rejections": 5,
+  "unfilled_entries": 9,
+  "trades_by_symbol": {
+    "SPY": 30,
+    "QQQ": 24,
+    "AAPL": 19,
+    "GOOGL": 21,
+    "NVDA": 25,
+    "SOL-USD": 14
+  }
+}
