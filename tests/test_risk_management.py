@@ -67,9 +67,23 @@ class TurtleLiteStrategyRiskTests(unittest.TestCase):
         strategy = self._run(self._base_rows())
         entries = self._completed(strategy, "entry")
         self.assertTrue(entries)
-        # The one-point daily range gives an ATR near 1.0, so the two-ATR
-        # stop risks about $2/share. A $10,000 account has a $50 budget.
-        self.assertEqual(abs(int(entries[0][3])), 24)
+        # Sizing uses the worst acceptable fill, not the signal close.
+        trade = strategy.active_trade or strategy.trade_diagnostics[0]
+        actual_risk = trade["size"] * (trade["entry_price"] - trade["stop_price"])
+        self.assertLessEqual(actual_risk, 10000.0 * 0.005)
+
+    def test_gap_above_max_entry_is_skipped_without_round_trip(self):
+        rows = self._base_rows()
+        rows[201].update(open=115.0, high=116.0, low=114.0, close=115.0)
+        strategy = self._run(rows)
+        entries = self._completed(strategy, "entry")
+        rejection_exits = [
+            trade for trade in strategy.trade_diagnostics
+            if trade["exit_reason"] == "entry_risk_rejection"
+        ]
+        self.assertFalse(entries)
+        self.assertFalse(rejection_exits)
+        self.assertGreater(strategy.rejected_entries, 0)
 
     def test_zero_sized_entry_creates_no_stop(self):
         strategy = self._run(self._base_rows(), cash=1.0)
