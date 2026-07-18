@@ -2,10 +2,33 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from run_validation import DEFAULT_PERIODS, discover_symbols, run_matrix, save_results
+from datetime import date
+
+from run_validation import (
+    DEFAULT_PERIODS,
+    annualized_return,
+    benchmark_metrics,
+    discover_symbols,
+    run_matrix,
+    save_results,
+)
 
 
 class ValidationMatrixTests(unittest.TestCase):
+    def test_annualized_return_accounts_for_test_length(self):
+        result = annualized_return(
+            100.0,
+            121.0,
+            date(2020, 1, 1),
+            date(2022, 1, 1),
+        )
+        self.assertAlmostEqual(result, 10.0, places=1)
+
+    def test_benchmark_reports_return_and_drawdown(self):
+        metrics = benchmark_metrics("data/SPY.csv", "2018-01-01", "2018-12-31")
+        self.assertIn("benchmark_annualized_return_percent", metrics)
+        self.assertGreater(metrics["benchmark_max_drawdown_percent"], 0)
+
     def test_discovers_symbols_in_stable_order(self):
         with tempfile.TemporaryDirectory() as directory:
             Path(directory, "SPY.csv").touch()

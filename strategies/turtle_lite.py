@@ -11,6 +11,7 @@ class TurtleLiteStrategy(bt.Strategy):
         atr_period=14,
         risk_pct=0.005,
         entry_buffer_atr=0.5,
+        initial_stop_atr=2.0,
         printlog=True,
     )
 
@@ -207,7 +208,7 @@ class TurtleLiteStrategy(bt.Strategy):
         if not (trend_ok and breakout_ok):
             return
 
-        stop_price = close - (2 * self.atr[0])
+        stop_price = close - (self.params.initial_stop_atr * self.atr[0])
         max_entry_price = close + (self.params.entry_buffer_atr * self.atr[0])
         size = self._calculate_position_size(
             entry_price=max_entry_price,
