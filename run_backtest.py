@@ -1,3 +1,4 @@
+import csv
 import json
 import os
 import sys
@@ -70,6 +71,42 @@ def save_json_report(report, output_path="reports/backtest_report.json"):
     print(f"\nJSON report saved to: {output_path}")
 
 
+def build_diagnostic_summary(trades, rejected_entries):
+    by_exit_reason = {}
+    by_exit_year = {}
+    total_commission = 0.0
+    total_slippage = 0.0
+
+    for trade in trades:
+        reason = trade["exit_reason"]
+        year = trade["exit_date"][:4]
+        for bucket, key in ((by_exit_reason, reason), (by_exit_year, year)):
+            item = bucket.setdefault(key, {"trades": 0, "net_pnl": 0.0})
+            item["trades"] += 1
+            item["net_pnl"] = round(item["net_pnl"] + trade["net_pnl"], 2)
+        total_commission += trade["commission"]
+        total_slippage += trade["estimated_slippage"]
+
+    return {
+        "recorded_trades": len(trades),
+        "rejected_entries": rejected_entries,
+        "total_commission": round(total_commission, 2),
+        "estimated_slippage": round(total_slippage, 2),
+        "by_exit_reason": by_exit_reason,
+        "by_exit_year": by_exit_year,
+    }
+
+
+def save_trade_ledger(trades, output_path):
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    if not trades:
+        return
+    with open(output_path, "w", newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=trades[0].keys())
+        writer.writeheader()
+        writer.writerows(trades)
+
+
 def main():
     symbol = "SPY"
 
@@ -115,6 +152,12 @@ def main():
     sharpe_data = strategy.analyzers.sharpe.get_analysis()
     drawdown_data = strategy.analyzers.drawdown.get_analysis()
     trade_data = strategy.analyzers.trades.get_analysis()
+    trade_ledger_path = f"reports/{symbol.lower()}_trade_diagnostics.csv"
+    save_trade_ledger(strategy.trade_diagnostics, trade_ledger_path)
+    diagnostic_summary = build_diagnostic_summary(
+        strategy.trade_diagnostics,
+        strategy.rejected_entries,
+    )
 
     total_trades = safe_get(trade_data, "total", "closed")
     winning_trades = safe_get(trade_data, "won", "total")
@@ -163,6 +206,7 @@ def main():
             "commission_rate": COMMISSION_RATE,
             "slippage_rate": SLIPPAGE_RATE,
         },
+        "trade_diagnostics": diagnostic_summary,
         "summary": {
             "profitable": net_profit > 0,
             "average_winner_larger_than_average_loser": average_win > abs(average_loss),
@@ -215,6 +259,7 @@ def main():
         print("The average winning trade was not larger than the average losing trade.")
 
     print("\nBacktest complete.")
+    print(f"Trade diagnostics saved to: {trade_ledger_path}")
 
     save_json_report(report)
 
