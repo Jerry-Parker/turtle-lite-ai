@@ -7,6 +7,32 @@ import backtrader as bt
 from strategies.turtle_lite import TurtleLiteStrategy
 
 
+STARTING_CASH = 100000.00
+COMMISSION_RATE = 0.001
+SLIPPAGE_RATE = 0.0005
+
+
+def configure_broker(
+    broker,
+    starting_cash=STARTING_CASH,
+    commission_rate=COMMISSION_RATE,
+    slippage_rate=SLIPPAGE_RATE,
+):
+    """Apply explicit, testable execution-cost assumptions."""
+    if starting_cash <= 0:
+        raise ValueError("starting_cash must be greater than zero")
+    if commission_rate < 0 or slippage_rate < 0:
+        raise ValueError("commission and slippage rates cannot be negative")
+
+    broker.setcash(starting_cash)
+    broker.setcommission(commission=commission_rate)
+    broker.set_slippage_perc(
+        perc=slippage_rate,
+        slip_open=True,
+        slip_match=True,
+    )
+
+
 def safe_get(dictionary, *keys, default=0):
     """
     Safely get nested values from Backtrader analyzer dictionaries.
@@ -69,10 +95,8 @@ def main():
     cerebro.adddata(data)
     cerebro.addstrategy(TurtleLiteStrategy)
 
-    starting_cash = 100000.00
-
-    cerebro.broker.setcash(starting_cash)
-    cerebro.broker.setcommission(commission=0.001)
+    starting_cash = STARTING_CASH
+    configure_broker(cerebro.broker, starting_cash=starting_cash)
 
     cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name="sharpe")
     cerebro.addanalyzer(bt.analyzers.DrawDown, _name="drawdown")
@@ -135,6 +159,10 @@ def main():
         "average_win": round(average_win, 2),
         "average_loss": round(average_loss, 2),
         "profit_factor": round(profit_factor, 2),
+        "cost_assumptions": {
+            "commission_rate": COMMISSION_RATE,
+            "slippage_rate": SLIPPAGE_RATE,
+        },
         "summary": {
             "profitable": net_profit > 0,
             "average_winner_larger_than_average_loser": average_win > abs(average_loss),
