@@ -17,7 +17,10 @@ from urllib.request import urlopen
 import pandas as pd
 
 
-BYBIT_PUBLIC_URL = "https://api.bybit.com"
+# Bybit documents both hosts as official mainnet endpoints. GitHub-hosted
+# runners are commonly rejected by api.bybit.com because their IPs are in the
+# US, so the scheduled observation uses the alternate official host.
+BYBIT_PUBLIC_URL = "https://api.bytick.com"
 ALLOWED_PUBLIC_PATHS = frozenset({"/v5/market/kline", "/v5/market/instruments-info"})
 RISK_PCT = 0.005
 INITIAL_STOP_ATR = 2.0
