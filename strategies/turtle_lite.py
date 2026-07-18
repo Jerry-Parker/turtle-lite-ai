@@ -12,6 +12,9 @@ class TurtleLiteStrategy(bt.Strategy):
         risk_pct=0.005,
         entry_buffer_atr=0.5,
         initial_stop_atr=2.0,
+        use_trailing=False,
+        trailing_activation_r=2.0,
+        trailing_stop_atr=2.5,
         printlog=True,
     )
 
@@ -32,6 +35,12 @@ class TurtleLiteStrategy(bt.Strategy):
         self.entry_signal_date = None
         self.entry_signal_price = None
         self.active_trade = None
+        self.entry_bar = None
+        self.highest_since_entry = None
+        self.initial_risk_per_share = None
+        self.active_stop_price = None
+        self.replacement_stop_price = None
+        self.trailing_active = False
         self.trade_diagnostics = []
         self.rejected_entries = 0
 
@@ -57,11 +66,27 @@ class TurtleLiteStrategy(bt.Strategy):
         return max(0, min(risk_sized, affordable))
 
     def _place_stop(self, price, size):
+        self.active_stop_price = price
         self.stop_order = self.sell(
             exectype=bt.Order.Stop,
             price=price,
             size=size,
         )
+
+    def _reset_position_state(self):
+        self.entry_bar = None
+        self.highest_since_entry = None
+        self.initial_risk_per_share = None
+        self.active_stop_price = None
+        self.replacement_stop_price = None
+        self.trailing_active = False
+
+    def _request_stop_replacement(self, price):
+        """Cancel the live stop before submitting its higher replacement."""
+        if self.stop_order is None or not self.position:
+            return
+        self.replacement_stop_price = price
+        self.cancel(self.stop_order)
 
     def _submit_channel_exit(self):
         if self.exit_order is None and self.position:
@@ -100,6 +125,7 @@ class TurtleLiteStrategy(bt.Strategy):
         )
         self.trade_diagnostics.append(trade)
         self.active_trade = None
+        self._reset_position_state()
 
     def notify_order(self, order):
         if order.status in (order.Submitted, order.Accepted):
@@ -120,7 +146,15 @@ class TurtleLiteStrategy(bt.Strategy):
                     "size": size,
                     "stop_price": round(stop_price, 6),
                     "entry_commission": order.executed.comm,
+                    "initial_risk_per_share": round(fill_price - stop_price, 6),
+                    "trailing_activated": False,
                 }
+
+                self.entry_bar = len(self)
+                self.highest_since_entry = fill_price
+                self.initial_risk_per_share = fill_price - stop_price
+                self.trailing_active = False
+                self.replacement_stop_price = None
 
                 self._place_stop(stop_price, size)
             elif order.status in (
@@ -141,21 +175,34 @@ class TurtleLiteStrategy(bt.Strategy):
 
         if order == self.stop_order:
             if order.status == order.Completed:
-                expected_exit_price = self.active_trade["stop_price"]
-                self._finalize_trade(order, "atr_stop", expected_exit_price)
+                expected_exit_price = self.active_stop_price
+                reason = "trailing_stop" if self.trailing_active else "atr_stop"
+                self._finalize_trade(order, reason, expected_exit_price)
                 self.log(
                     f"STOP EXECUTED | Price: {order.executed.price:.2f} | "
                     f"Size: {order.executed.size}"
                 )
                 self.stop_order = None
                 self.pending_exit = False
+                self.replacement_stop_price = None
             elif order.status == order.Canceled:
                 self.stop_order = None
                 if self.pending_exit:
                     self._submit_channel_exit()
-            elif order.status in (order.Margin, order.Rejected):
+                elif self.replacement_stop_price is not None and self.position:
+                    replacement = self.replacement_stop_price
+                    self.replacement_stop_price = None
+                    self._place_stop(replacement, self.position.size)
+            elif order.status in (order.Expired, order.Margin, order.Rejected):
                 self.log("STOP MARGIN / REJECTED")
                 self.stop_order = None
+                self.replacement_stop_price = None
+                # Never knowingly leave an open trade without protection.
+                if self.position:
+                    self.pending_exit = True
+                    self.pending_exit_reason = "risk_stop_rejected"
+                    self.pending_exit_signal_price = self.data.close[0]
+                    self._submit_channel_exit()
             return
 
         if order == self.exit_order:
@@ -187,6 +234,9 @@ class TurtleLiteStrategy(bt.Strategy):
         close = self.data.close[0]
 
         if self.position:
+            self.highest_since_entry = max(
+                self.highest_since_entry, float(self.data.high[0])
+            )
             if close < self.lowest_10[0]:
                 self.log(
                     f"EXIT SIGNAL | Close {close:.2f} below 10-day low "
@@ -196,11 +246,35 @@ class TurtleLiteStrategy(bt.Strategy):
                     self.pending_exit = True
                     self.pending_exit_reason = "channel_exit"
                     self.pending_exit_signal_price = close
+                    self.replacement_stop_price = None
                     self.cancel(self.stop_order)
                 else:
                     self.pending_exit_reason = "channel_exit"
                     self.pending_exit_signal_price = close
                     self._submit_channel_exit()
+                return
+
+            if (
+                self.params.use_trailing
+                and self.stop_order is not None
+                and len(self) > self.entry_bar
+            ):
+                activation_price = (
+                    self.active_trade["entry_price"]
+                    + self.params.trailing_activation_r * self.initial_risk_per_share
+                )
+                if self.highest_since_entry >= activation_price:
+                    self.trailing_active = True
+                    self.active_trade["trailing_activated"] = True
+                    candidate = (
+                        self.highest_since_entry
+                        - self.params.trailing_stop_atr * float(self.atr[0])
+                    )
+                    # A trail can tighten protection, but can never loosen it.
+                    ratcheted_price = max(self.active_stop_price, candidate)
+                    if ratcheted_price > self.active_stop_price:
+                        self.active_trade["stop_price"] = round(ratcheted_price, 6)
+                        self._request_stop_replacement(ratcheted_price)
             return
 
         trend_ok = close > self.sma200[0] and self.sma50[0] > self.sma200[0]

@@ -1,0 +1,7 @@
+period,variant,annualized_return_percent,max_drawdown_percent,sharpe_ratio,closed_trades,time_with_any_position_percent,trailing_stop_exits,observations,percent_of_days
+full_period,baseline,9.26,6.87,1.314,133.0,71.35,0.0,,
+full_period,trailing,5.37,5.45,1.008,164.0,65.55,63.0,,
+bear_2022,baseline,-1.2,1.48,-1.129,3.0,7.4,0.0,,
+bear_2022,trailing,-1.2,1.48,-1.129,3.0,7.4,0.0,,
+high_volatility_only,baseline,2.03,5.73,0.483,,,,600.0,26.2
+high_volatility_only,trailing,0.18,6.2,0.065,,,,600.0,26.2

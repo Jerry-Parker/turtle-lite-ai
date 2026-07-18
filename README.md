@@ -80,3 +80,13 @@ python run_final_stress_suite.py
 This reports the 2022 bear period, performance during high-volatility days,
 50 reproducible starting-date samples, and updated CSCV/PBO results using the
 latest downloaded data. It is diagnostic only and does not alter the strategy.
+
+Run the optional trailing-stop experiment:
+
+```bash
+python run_trailing_experiment.py
+```
+
+This compares the locked baseline with a stop that activates at +2R and
+ratchets 2.5 ATR below the highest high. Trailing remains disabled by default,
+and the experiment does not use partial exits or change the 0.5% risk rule.
