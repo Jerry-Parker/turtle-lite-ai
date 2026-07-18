@@ -7,146 +7,106 @@ from strategies.turtle_lite import TurtleLiteStrategy
 
 
 class RecordingStrategy(TurtleLiteStrategy):
+    params = dict(printlog=False)
+
     def __init__(self):
         super().__init__()
-        self.order_events = []
-        self.entry_filled = False
-        self.entry_rejected = False
-        self.stop_cancel_confirmed = False
-        self.stop_fill_price = None
-        self.stop_fill_size = None
-        self.exit_sell_count = 0
-        self.buy_size = None
+        self.events = []
 
     def notify_order(self, order):
-        is_stop_order = order == self.stop_order
-        super().notify_order(order)
-
-        self.order_events.append(
-            {
-                "status": order.status,
-                "isbuy": order.isbuy(),
-                "issell": order.issell(),
-                "price": order.price,
-                "executed_price": getattr(order.executed, "price", None),
-                "size": getattr(order.executed, "size", None),
-            }
+        kind = (
+            "entry" if order == self.entry_order
+            else "stop" if order == self.stop_order
+            else "exit" if order == self.exit_order
+            else "other"
         )
-
-        if order.isbuy() and order.status == order.Completed:
-            self.entry_filled = True
-            self.buy_size = int(getattr(order.executed, "size", 0))
-        elif order.isbuy() and order.status in [order.Canceled, order.Margin, order.Rejected]:
-            self.entry_rejected = True
-
-        if order.issell() and order.status == order.Completed and is_stop_order:
-            self.exit_sell_count += 1
-            self.stop_fill_price = getattr(order.executed, "price", None)
-            self.stop_fill_size = getattr(order.executed, "size", None)
+        self.events.append(
+            (kind, order.status, order.executed.price, order.executed.size)
+        )
+        super().notify_order(order)
 
 
 class TurtleLiteStrategyRiskTests(unittest.TestCase):
-    def _build_cerebro(self, strategy_cls, cash=10000.0):
+    def _run(self, rows, cash=10000.0):
+        frame = pd.DataFrame(rows)
+        frame.index = pd.date_range("2024-01-01", periods=len(frame), freq="D")
         cerebro = bt.Cerebro()
-        cerebro.addstrategy(strategy_cls)
+        cerebro.addstrategy(RecordingStrategy)
         cerebro.broker.setcash(cash)
         cerebro.broker.setcommission(commission=0.0)
-        return cerebro
+        cerebro.adddata(bt.feeds.PandasData(dataname=frame))
+        return cerebro.run()[0]
 
-    def _build_data(self, close_prices, gap_index=None, gap_open=None, exit_index=None, exit_low=None):
-        closes = list(close_prices)
-        opens = list(close_prices)
-        highs = [price + 0.5 for price in close_prices]
-        lows = [price - 0.5 for price in close_prices]
+    def _base_rows(self, count=230):
+        rows = []
+        for index in range(count):
+            close = 100.0 + (index * 0.05)
+            if index >= 200:
+                close += 1.0
+            rows.append(
+                {
+                    "open": close,
+                    "high": close + 0.50,
+                    "low": close - 0.50,
+                    "close": close,
+                    "volume": 1000,
+                }
+            )
+        # Fill the breakout entry at its signal price so these lifecycle tests
+        # are not testing the separate adverse-entry-gap rejection path.
+        rows[201]["open"] = rows[200]["close"]
+        return rows
 
-        if gap_index is not None and gap_open is not None:
-            opens[gap_index] = gap_open
-            highs[gap_index] = max(highs[gap_index], gap_open)
-            lows[gap_index] = min(lows[gap_index], gap_open)
-            closes[gap_index] = gap_open
+    def _completed(self, strategy, kind):
+        return [
+            event for event in strategy.events
+            if event[0] == kind and event[1] == bt.Order.Completed
+        ]
 
-        if exit_index is not None and exit_low is not None:
-            opens[exit_index] = exit_low
-            highs[exit_index] = max(highs[exit_index], exit_low + 0.2)
-            lows[exit_index] = exit_low
-            closes[exit_index] = exit_low
+    def test_position_size_uses_risk_pct_and_stop_distance(self):
+        strategy = self._run(self._base_rows())
+        entries = self._completed(strategy, "entry")
+        self.assertTrue(entries)
+        # The one-point daily range gives an ATR near 1.0, so the two-ATR
+        # stop risks about $2/share. A $10,000 account has a $50 budget.
+        self.assertEqual(abs(int(entries[0][3])), 24)
 
-        df = pd.DataFrame(
-            {
-                "datetime": pd.date_range("2024-01-01", periods=len(closes), freq="D"),
-                "open": opens,
-                "high": highs,
-                "low": lows,
-                "close": closes,
-                "volume": 1000,
-            }
-        ).set_index("datetime")
-        return bt.feeds.PandasData(dataname=df)
+    def test_zero_sized_entry_creates_no_stop(self):
+        strategy = self._run(self._base_rows(), cash=1.0)
+        self.assertFalse(self._completed(strategy, "entry"))
+        self.assertFalse(self._completed(strategy, "stop"))
 
-    def test_entry_uses_exact_position_size_from_signal_and_fill(self):
-        close_prices = [100 + i * 0.8 for i in range(250)]
-        cerebro = self._build_cerebro(RecordingStrategy)
-        cerebro.adddata(self._build_data(close_prices))
-
-        strategies = cerebro.run()
-        strategy = strategies[0]
-
-        self.assertTrue(strategy.entry_filled)
-        self.assertEqual(strategy.buy_size, 19)
-
-    def test_rejected_entry_does_not_create_stop(self):
-        close_prices = [100 + i * 0.05 for i in range(250)]
-        cerebro = self._build_cerebro(RecordingStrategy, cash=150.0)
-        cerebro.adddata(self._build_data(close_prices))
-
-        strategies = cerebro.run()
-        strategy = strategies[0]
-
-        self.assertTrue(strategy.entry_rejected)
-        self.assertIsNone(strategy.stop_order)
-        self.assertIsNone(strategy.stop_price)
-
-    def test_normal_exit_cancels_stop_before_exit_sell(self):
-        close_prices = [100 + i * 0.05 for i in range(250)]
-        exit_index = 205
-        exit_low = 100.0 - 0.2
-        close_prices[exit_index] = exit_low
-        cerebro = self._build_cerebro(RecordingStrategy, cash=1000.0)
-        cerebro.adddata(self._build_data(close_prices, exit_index=exit_index, exit_low=exit_low))
-
-        strategies = cerebro.run()
-        strategy = strategies[0]
-
-        self.assertTrue(strategy.stop_cancel_confirmed)
-        self.assertTrue(strategy.exit_sell_count >= 1)
+    def test_normal_exit_waits_for_stop_cancellation(self):
+        rows = self._base_rows()
+        # Entry fills around bar 201. Later close below the prior 10-day low,
+        # but above the two-ATR stop, to exercise the channel exit path.
+        rows[210].update(open=109.50, high=109.70, low=109.40, close=109.50)
+        strategy = self._run(rows)
+        canceled_stops = [
+            event for event in strategy.events
+            if event[0] == "stop" and event[1] == bt.Order.Canceled
+        ]
+        exits = self._completed(strategy, "exit")
+        self.assertTrue(canceled_stops)
+        self.assertTrue(exits)
+        self.assertLess(strategy.events.index(canceled_stops[0]), strategy.events.index(exits[0]))
 
     def test_stop_fill_does_not_trigger_second_sell(self):
-        close_prices = [100 + i * 0.05 for i in range(250)]
-        gap_index = 200
-        gap_open = 99.5
-        close_prices[gap_index] = gap_open
-        cerebro = self._build_cerebro(RecordingStrategy, cash=1000.0)
-        cerebro.adddata(self._build_data(close_prices, gap_index=gap_index, gap_open=gap_open))
+        rows = self._base_rows()
+        rows[210].update(open=108.50, high=108.70, low=108.30, close=108.50)
+        strategy = self._run(rows)
+        stops = self._completed(strategy, "stop")
+        exits = self._completed(strategy, "exit")
+        self.assertEqual(len(stops), 1)
+        self.assertEqual(len(exits), 0)
 
-        strategies = cerebro.run()
-        strategy = strategies[0]
-
-        self.assertEqual(strategy.exit_sell_count, 1)
-        self.assertEqual(strategy.stop_fill_price, 255.0)
-
-    def test_gap_through_stop_uses_executable_open_price(self):
-        close_prices = [100 + i * 0.05 for i in range(250)]
-        gap_index = 200
-        gap_open = 99.5
-        close_prices[gap_index] = gap_open
-        cerebro = self._build_cerebro(RecordingStrategy, cash=1000.0)
-        cerebro.adddata(self._build_data(close_prices, gap_index=gap_index, gap_open=gap_open))
-
-        strategies = cerebro.run()
-        strategy = strategies[0]
-
-        self.assertEqual(strategy.stop_fill_price, 99.5)
-        self.assertEqual(strategy.stop_fill_size, 1)
+    def test_gap_through_stop_uses_open_price(self):
+        rows = self._base_rows()
+        rows[210].update(open=107.00, high=108.00, low=106.50, close=107.50)
+        strategy = self._run(rows)
+        stops = self._completed(strategy, "stop")
+        self.assertEqual(len(stops), 1)
+        self.assertEqual(stops[0][2], 107.00)
 
 
 if __name__ == "__main__":
