@@ -80,3 +80,18 @@ python run_final_stress_suite.py
 This reports the 2022 bear period, performance during high-volatility days,
 50 reproducible starting-date samples, and updated CSCV/PBO results using the
 latest downloaded data. It is diagnostic only and does not alter the strategy.
+
+## Read-only Bybit observation
+
+Generate a locked-baseline signal from public Bybit data without API keys or
+order access:
+
+```bash
+python bybit_read_only_monitor.py --symbol SOLUSDT --category linear
+```
+
+The monitor reads completed daily candles, checks the existing Turtle entry,
+calculates a hypothetical 0.5%-risk order, and appends one deduplicated JSON
+event per candle to `logs/bybit_read_only_signals.jsonl`. It contains no
+authenticated or order-placement endpoints and always reports zero submitted
+orders.
