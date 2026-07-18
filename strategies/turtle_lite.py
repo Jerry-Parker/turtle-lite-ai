@@ -10,6 +10,7 @@ class TurtleLiteStrategy(bt.Strategy):
         exit_period=10,
         atr_period=14,
         risk_pct=0.005,
+        entry_buffer_atr=0.5,
         printlog=True,
     )
 
@@ -20,6 +21,7 @@ class TurtleLiteStrategy(bt.Strategy):
 
     def __init__(self):
         self.entry_order = None
+        self.entry_order_bar = None
         self.stop_order = None
         self.exit_order = None
         self.pending_stop_price = None
@@ -119,27 +121,18 @@ class TurtleLiteStrategy(bt.Strategy):
                     "entry_commission": order.executed.comm,
                 }
 
-                # A gap above the signal can make the filled position exceed the
-                # risk budget. Reject it rather than claiming the 0.5% limit held.
-                allowed_size = self._calculate_position_size(
-                    entry_price=fill_price,
-                    stop_price=stop_price,
-                    account_value=self.broker.getvalue(),
-                    cash=self.broker.getcash() + (fill_price * size),
-                )
-                if allowed_size < size:
-                    self.rejected_entries += 1
-                    self.log("ENTRY REJECTED | Fill exceeded the risk budget")
-                    self.pending_exit_reason = "entry_risk_rejection"
-                    self.pending_exit_signal_price = fill_price
-                    self.exit_order = self.sell(size=size)
-                else:
-                    self._place_stop(stop_price, size)
-            elif order.status in (order.Canceled, order.Margin, order.Rejected):
+                self._place_stop(stop_price, size)
+            elif order.status in (
+                order.Canceled,
+                order.Expired,
+                order.Margin,
+                order.Rejected,
+            ):
                 self.rejected_entries += 1
-                self.log("ENTRY CANCELED / MARGIN / REJECTED")
+                self.log("ENTRY NOT FILLED WITHIN RISK LIMIT")
 
             self.entry_order = None
+            self.entry_order_bar = None
             self.pending_stop_price = None
             self.entry_signal_date = None
             self.entry_signal_price = None
@@ -181,7 +174,13 @@ class TurtleLiteStrategy(bt.Strategy):
             self.pending_exit_signal_price = None
 
     def next(self):
-        if self.entry_order or self.exit_order or self.pending_exit:
+        if self.entry_order:
+            # Give the capped entry order one trading session to fill.
+            if len(self) > self.entry_order_bar:
+                self.cancel(self.entry_order)
+            return
+
+        if self.exit_order or self.pending_exit:
             return
 
         close = self.data.close[0]
@@ -209,8 +208,9 @@ class TurtleLiteStrategy(bt.Strategy):
             return
 
         stop_price = close - (2 * self.atr[0])
+        max_entry_price = close + (self.params.entry_buffer_atr * self.atr[0])
         size = self._calculate_position_size(
-            entry_price=close,
+            entry_price=max_entry_price,
             stop_price=stop_price,
             account_value=self.broker.getvalue(),
             cash=self.broker.getcash(),
@@ -223,9 +223,15 @@ class TurtleLiteStrategy(bt.Strategy):
         self.log(
             f"ENTRY SIGNAL | Close: {close:.2f} | "
             f"20-day high: {self.highest_20[0]:.2f} | "
-            f"ATR: {self.atr[0]:.2f} | Size: {size}"
+            f"ATR: {self.atr[0]:.2f} | Max fill: {max_entry_price:.2f} | "
+            f"Size: {size}"
         )
         self.pending_stop_price = stop_price
         self.entry_signal_date = self.datas[0].datetime.date(0).isoformat()
         self.entry_signal_price = close
-        self.entry_order = self.buy(size=size)
+        self.entry_order = self.buy(
+            exectype=bt.Order.Limit,
+            price=max_entry_price,
+            size=size,
+        )
+        self.entry_order_bar = len(self)
