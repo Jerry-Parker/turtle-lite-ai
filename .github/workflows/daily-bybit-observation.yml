@@ -1,0 +1,93 @@
+name: Daily Bybit observation
+
+on:
+  schedule:
+    # Daily candles close at 00:00 UTC. Avoid the busiest top-of-hour period.
+    - cron: "17 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: daily-bybit-observation
+  cancel-in-progress: false
+
+jobs:
+  observe-sol:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Generate read-only observation
+        run: |
+          mkdir -p artifacts
+          python bybit_read_only_monitor.py \
+            --symbol SOLUSDT \
+            --category linear \
+            --paper-equity 100000 \
+            --output artifacts/bybit_read_only_signals.jsonl \
+            | tee artifacts/run_output.txt
+
+      - name: Prepare summary and alert details
+        id: observation
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          event = json.loads(Path("artifacts/bybit_read_only_signals.jsonl").read_text().splitlines()[-1])
+          summary = [
+              "## Daily read-only Bybit observation",
+              "",
+              f"- Date: {event['candle_date']}",
+              f"- Symbol: {event['symbol']}",
+              f"- Result: **{event['signal']}**",
+              f"- Close: {event['close']}",
+              f"- Trend filter: {event['trend_filter_passed']}",
+              f"- Breakout: {event['breakout_passed']}",
+              f"- Hypothetical risk: {event['risk_percent']}%",
+              f"- Orders submitted: **{event['orders_submitted']}**",
+          ]
+          with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as file:
+              file.write("\n".join(summary) + "\n")
+          with Path(os.environ["GITHUB_OUTPUT"]).open("a") as file:
+              file.write(f"signal={event['signal']}\n")
+              file.write(f"event_id={event['event_id']}\n")
+              file.write(f"candle_date={event['candle_date']}\n")
+          Path("artifacts/issue_body.md").write_text("\n".join(summary) + "\n")
+          PY
+
+      - name: Upload 90-day observation record
+        uses: actions/upload-artifact@v4
+        with:
+          name: bybit-observation-${{ steps.observation.outputs.candle_date }}
+          path: artifacts/
+          retention-days: 90
+          if-no-files-found: error
+
+      - name: Open issue for a new hypothetical entry
+        if: steps.observation.outputs.signal == 'HYPOTHETICAL_ENTRY'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_ID: ${{ steps.observation.outputs.event_id }}
+          CANDLE_DATE: ${{ steps.observation.outputs.candle_date }}
+        run: |
+          if ! gh issue list --state all --search "$EVENT_ID in:title" --json title --jq '.[].title' | grep -q "$EVENT_ID"; then
+            gh issue create \
+              --title "[Paper signal][$EVENT_ID] SOLUSDT entry on $CANDLE_DATE" \
+              --body-file artifacts/issue_body.md
+          fi

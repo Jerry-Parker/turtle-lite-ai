@@ -95,3 +95,8 @@ calculates a hypothetical 0.5%-risk order, and appends one deduplicated JSON
 event per candle to `logs/bybit_read_only_signals.jsonl`. It contains no
 authenticated or order-placement endpoints and always reports zero submitted
 orders.
+
+The `Daily Bybit observation` GitHub workflow runs this monitor at 00:17 UTC
+(10:17 Brisbane time), retains each record for 90 days, and opens a GitHub
+issue only for a hypothetical entry signal. It can also be started manually
+from the repository's **Actions** tab.
