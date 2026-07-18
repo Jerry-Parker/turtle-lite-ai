@@ -32,6 +32,8 @@ class TurtleLiteStrategy(bt.Strategy):
 
     def __init__(self):
         self.order = None
+        self.stop_order = None
+        self.stop_price = None
 
         # Prior 20-day high, excluding today's candle
         self.highest_20 = bt.ind.Highest(
@@ -50,6 +52,50 @@ class TurtleLiteStrategy(bt.Strategy):
         self.sma50 = bt.ind.SMA(self.data.close, period=50)
         self.sma200 = bt.ind.SMA(self.data.close, period=200)
 
+    def _calculate_position_size(self, entry_price, stop_price, account_value, cash):
+        if entry_price <= 0 or stop_price <= 0:
+            return 0
+
+        risk_per_share = entry_price - stop_price
+        if risk_per_share <= 0:
+            return 0
+
+        max_risk_dollars = account_value * self.params.risk_pct
+        position_size = int(max_risk_dollars / risk_per_share)
+
+        if position_size <= 0:
+            return 0
+
+        max_affordable_size = int(cash / entry_price)
+        return min(position_size, max_affordable_size)
+
+    def _should_exit_on_stop(self, price):
+        if self.stop_price is None:
+            return False
+
+        return price <= self.stop_price
+
+    def _place_stop_loss(self, stop_price, size):
+        if size <= 0 or self.stop_order is not None:
+            return
+
+        self.stop_price = stop_price
+        self.stop_order = self.sell(
+            exectype=bt.Order.Stop,
+            price=stop_price,
+            size=size,
+        )
+
+    def _cancel_stop_order(self):
+        if self.stop_order is None:
+            return
+
+        if self.stop_order.status in [bt.Order.Submitted, bt.Order.Accepted]:
+            self.cancel(self.stop_order)
+
+        self.stop_order = None
+        self.stop_price = None
+
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
             return
@@ -60,6 +106,11 @@ class TurtleLiteStrategy(bt.Strategy):
                     f"BUY EXECUTED | Price: {order.executed.price:.2f} | "
                     f"Size: {order.executed.size}"
                 )
+                if self.position:
+                    self._place_stop_loss(
+                        stop_price=self.stop_price or (self.data.close[0] - (2 * self.atr[0])),
+                        size=self.position.size,
+                    )
             elif order.issell():
                 self.log(
                     f"SELL EXECUTED | Price: {order.executed.price:.2f} | "
@@ -69,7 +120,11 @@ class TurtleLiteStrategy(bt.Strategy):
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
             self.log("ORDER CANCELED / MARGIN / REJECTED")
 
-        self.order = None
+        if order == self.order:
+            self.order = None
+        if order == self.stop_order:
+            self.stop_order = None
+            self.stop_price = None
 
     def next(self):
         if self.order:
@@ -86,6 +141,7 @@ class TurtleLiteStrategy(bt.Strategy):
                     f"EXIT SIGNAL | Close {close:.2f} below 10-day low "
                     f"{self.lowest_10[0]:.2f}"
                 )
+                self._cancel_stop_order()
                 self.order = self.sell(size=self.position.size)
             return
 
@@ -100,12 +156,12 @@ class TurtleLiteStrategy(bt.Strategy):
             if risk_per_share <= 0:
                 return
 
-            max_risk_dollars = account_value * self.params.risk_pct
-            position_size = int(max_risk_dollars / risk_per_share)
-
-            # Make sure we do not buy more than available cash
-            max_affordable_size = int(cash / close)
-            position_size = min(position_size, max_affordable_size)
+            position_size = self._calculate_position_size(
+                entry_price=close,
+                stop_price=stop_price,
+                account_value=account_value,
+                cash=cash,
+            )
 
             if position_size > 0:
                 self.log(
