@@ -1,0 +1,123 @@
+{
+  "method": {
+    "baseline_unchanged": true,
+    "trailing_rule": "activate at +2R; trail 2.5 ATR below highest high; ratchet upward only",
+    "partial_exits": false,
+    "risk_per_trade_percent": 0.5,
+    "start_date_samples": 50
+  },
+  "full_period": {
+    "baseline": {
+      "annualized_return_percent": 9.26,
+      "max_drawdown_percent": 6.87,
+      "sharpe_ratio": 1.314,
+      "closed_trades": 133,
+      "time_with_any_position_percent": 71.35,
+      "trailing_stop_exits": 0
+    },
+    "trailing": {
+      "annualized_return_percent": 5.37,
+      "max_drawdown_percent": 5.45,
+      "sharpe_ratio": 1.008,
+      "closed_trades": 164,
+      "time_with_any_position_percent": 65.55,
+      "trailing_stop_exits": 63
+    }
+  },
+  "bear_2022": {
+    "baseline": {
+      "annualized_return_percent": -1.2,
+      "max_drawdown_percent": 1.48,
+      "sharpe_ratio": -1.129,
+      "closed_trades": 3,
+      "time_with_any_position_percent": 7.4,
+      "trailing_stop_exits": 0
+    },
+    "trailing": {
+      "annualized_return_percent": -1.2,
+      "max_drawdown_percent": 1.48,
+      "sharpe_ratio": -1.129,
+      "closed_trades": 3,
+      "time_with_any_position_percent": 7.4,
+      "trailing_stop_exits": 0
+    }
+  },
+  "high_volatility_only": {
+    "baseline": {
+      "observations": 600,
+      "percent_of_days": 26.2,
+      "annualized_return_percent": 2.03,
+      "max_drawdown_percent": 5.73,
+      "sharpe_ratio": 0.483
+    },
+    "trailing": {
+      "observations": 600,
+      "percent_of_days": 26.2,
+      "annualized_return_percent": 0.18,
+      "max_drawdown_percent": 6.2,
+      "sharpe_ratio": 0.065
+    }
+  },
+  "random_start_dates": {
+    "baseline": {
+      "positive_annualized_return_percent": 100.0,
+      "annualized_return_distribution": {
+        "minimum": 0.76,
+        "p05": 1.83,
+        "median": 8.21,
+        "p95": 9.42,
+        "maximum": 9.76
+      },
+      "max_drawdown_distribution": {
+        "minimum": 5.56,
+        "p05": 6.86,
+        "median": 6.88,
+        "p95": 7.03,
+        "maximum": 7.38
+      }
+    },
+    "trailing": {
+      "positive_annualized_return_percent": 100.0,
+      "annualized_return_distribution": {
+        "minimum": 1.09,
+        "p05": 2.17,
+        "median": 4.91,
+        "p95": 6.45,
+        "maximum": 6.98
+      },
+      "max_drawdown_distribution": {
+        "minimum": 4.84,
+        "p05": 5.42,
+        "median": 5.46,
+        "p95": 5.5,
+        "maximum": 6.68
+      }
+    }
+  },
+  "two_configuration_pbo": {
+    "SPY": {
+      "pbo": 0.8857,
+      "oos_loss_probability": 0.4429
+    },
+    "QQQ": {
+      "pbo": 0.1143,
+      "oos_loss_probability": 0.0143
+    },
+    "AAPL": {
+      "pbo": 0.8,
+      "oos_loss_probability": 0.0
+    },
+    "GOOGL": {
+      "pbo": 0.1143,
+      "oos_loss_probability": 0.0
+    },
+    "NVDA": {
+      "pbo": 0.8571,
+      "oos_loss_probability": 0.0
+    },
+    "SOL-USD": {
+      "pbo": 0.8,
+      "oos_loss_probability": 0.1571
+    }
+  }
+}

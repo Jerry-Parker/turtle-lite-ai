@@ -12,6 +12,11 @@ class RecordingStrategy(TurtleLiteStrategy):
     def __init__(self):
         super().__init__()
         self.events = []
+        self.stop_submissions = []
+
+    def _place_stop(self, price, size):
+        self.stop_submissions.append(price)
+        super()._place_stop(price, size)
 
     def notify_order(self, order):
         kind = (
@@ -27,11 +32,11 @@ class RecordingStrategy(TurtleLiteStrategy):
 
 
 class TurtleLiteStrategyRiskTests(unittest.TestCase):
-    def _run(self, rows, cash=10000.0):
+    def _run(self, rows, cash=10000.0, **strategy_params):
         frame = pd.DataFrame(rows)
         frame.index = pd.date_range("2024-01-01", periods=len(frame), freq="D")
         cerebro = bt.Cerebro()
-        cerebro.addstrategy(RecordingStrategy)
+        cerebro.addstrategy(RecordingStrategy, **strategy_params)
         cerebro.broker.setcash(cash)
         cerebro.broker.setcommission(commission=0.0)
         cerebro.adddata(bt.feeds.PandasData(dataname=frame))
@@ -124,6 +129,39 @@ class TurtleLiteStrategyRiskTests(unittest.TestCase):
         self.assertEqual(stops[0][2], 107.00)
         self.assertEqual(strategy.trade_diagnostics[0]["exit_price"], 107.00)
         self.assertGreater(strategy.trade_diagnostics[0]["estimated_slippage"], 0)
+
+    def _trailing_rows(self):
+        rows = self._base_rows()
+        # The entry fills near 111. A later surge exceeds +2R and activates
+        # the trail without touching the original stop or channel exit.
+        rows[205].update(open=113.0, high=118.0, low=112.5, close=117.0)
+        rows[206].update(open=117.0, high=119.0, low=116.0, close=118.0)
+        return rows
+
+    def test_trailing_stop_is_disabled_by_default(self):
+        strategy = self._run(self._trailing_rows())
+        self.assertEqual(len(strategy.stop_submissions), 1)
+        self.assertFalse(strategy.trailing_active)
+
+    def test_trailing_stop_activates_at_two_r_and_ratchets_up(self):
+        strategy = self._run(self._trailing_rows(), use_trailing=True)
+        self.assertGreater(len(strategy.stop_submissions), 1)
+        self.assertEqual(strategy.stop_submissions, sorted(strategy.stop_submissions))
+        self.assertGreater(strategy.stop_submissions[-1], strategy.stop_submissions[0])
+        trade = strategy.active_trade or strategy.trade_diagnostics[0]
+        self.assertTrue(trade["trailing_activated"])
+
+    def test_gap_through_trailing_stop_fills_at_open(self):
+        rows = self._trailing_rows()
+        rows[207].update(open=110.0, high=111.0, low=109.0, close=110.5)
+        strategy = self._run(rows, use_trailing=True)
+        trailing_exits = [
+            trade for trade in strategy.trade_diagnostics
+            if trade["exit_reason"] == "trailing_stop"
+        ]
+        self.assertEqual(len(trailing_exits), 1)
+        self.assertEqual(trailing_exits[0]["exit_price"], 110.0)
+        self.assertGreater(trailing_exits[0]["estimated_slippage"], 0)
 
 
 if __name__ == "__main__":

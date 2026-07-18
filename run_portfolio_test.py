@@ -38,6 +38,9 @@ class Position:
     entry_commission: float
     entry_date: str
     committed_risk: float
+    initial_risk_per_share: float
+    highest_since_entry: float
+    trailing_active: bool = False
 
 
 def load_market_data(csv_path):
@@ -107,6 +110,9 @@ def run_portfolio(
     start_date="2020-01-01",
     end_date=None,
     portfolio_risk_cap=PORTFOLIO_RISK_CAP,
+    use_trailing=False,
+    trailing_activation_r=2.0,
+    trailing_stop_atr=2.5,
 ):
     market_data = {
         symbol: load_market_data(Path(data_directory) / f"{symbol}.csv")
@@ -166,7 +172,10 @@ def run_portfolio(
                     "symbol": symbol,
                     "entry_date": position.entry_date,
                     "exit_date": current_date.date().isoformat(),
-                    "exit_reason": "atr_stop" if stop_hit else "channel_exit",
+                    "exit_reason": (
+                        "trailing_stop" if stop_hit and position.trailing_active
+                        else "atr_stop" if stop_hit else "channel_exit"
+                    ),
                     "net_pnl": round(
                         gross_pnl - position.entry_commission - exit_commission, 2
                     ),
@@ -216,6 +225,8 @@ def run_portfolio(
                 entry_commission=commission,
                 entry_date=current_date.date().isoformat(),
                 committed_risk=size * (fill_price - pending["stop_price"]),
+                initial_risk_per_share=fill_price - pending["stop_price"],
+                highest_since_entry=fill_price,
             )
             allocation_risk_percentages.append(
                 (
@@ -234,6 +245,23 @@ def run_portfolio(
             if symbol in positions:
                 if row["Close"] < row["exit_low"]:
                     pending_exits.add(symbol)
+                position = positions[symbol]
+                # Do not use the entry bar's full high: a limit fill may have
+                # occurred after that high, so its intrabar ordering is unknown.
+                if current_date.date().isoformat() == position.entry_date:
+                    continue
+                position.highest_since_entry = max(position.highest_since_entry, float(row["High"]))
+                activation = (
+                    position.entry_price
+                    + trailing_activation_r * position.initial_risk_per_share
+                )
+                if use_trailing and position.highest_since_entry >= activation:
+                    position.trailing_active = True
+                    candidate = (
+                        position.highest_since_entry
+                        - trailing_stop_atr * float(row["atr"])
+                    )
+                    position.stop_price = max(position.stop_price, candidate)
 
         current_equity = cash + sum(
             position.size * latest_close.get(symbol, position.entry_price)
@@ -317,6 +345,9 @@ def run_portfolio(
             "entry_buffer_atr": ENTRY_BUFFER_ATR,
             "portfolio_risk_cap": portfolio_risk_cap,
             "trend_filter": "close > SMA200 and SMA50 > SMA200",
+            "use_trailing": use_trailing,
+            "trailing_activation_r": trailing_activation_r,
+            "trailing_stop_atr": trailing_stop_atr,
         },
         "final_value": round(final_value, 2),
         "total_return_percent": round(total_return, 2),
@@ -347,6 +378,10 @@ def run_portfolio(
         "unfilled_entries": unfilled_entries,
         "trades_by_symbol": {
             symbol: sum(trade["symbol"] == symbol for trade in trades) for symbol in symbols
+        },
+        "exits_by_reason": {
+            reason: sum(trade["exit_reason"] == reason for trade in trades)
+            for reason in ("atr_stop", "trailing_stop", "channel_exit")
         },
         "equity_curve": [
             {"date": date.date().isoformat(), "value": round(value, 2)}
