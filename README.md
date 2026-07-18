@@ -21,3 +21,16 @@ Version 1 uses a simplified Turtle-style trend-following strategy:
 ## Status
 
 Prototype stage.
+
+## Validate across assets and market periods
+
+Run the complete validation matrix:
+
+```bash
+python run_validation.py
+```
+
+The runner automatically tests every CSV in `data/` over full history,
+2005–2017, and 2018 onward. It prints a short comparison and saves detailed
+results to `reports/validation_matrix.json` and
+`reports/validation_matrix.csv`.
