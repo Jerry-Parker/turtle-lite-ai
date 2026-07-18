@@ -34,3 +34,17 @@ The runner automatically tests every CSV in `data/` over full history,
 2005–2017, and 2018 onward. It prints a short comparison and saves detailed
 results to `reports/validation_matrix.json` and
 `reports/validation_matrix.csv`.
+
+The validation report includes an idealized buy-and-hold benchmark,
+annualized return, maximum drawdown, return-to-drawdown, and time invested.
+
+Run the broader reliability suite:
+
+```bash
+python run_reliability_tests.py
+```
+
+This tests predeclared nearby parameters over fixed five-year windows,
+stresses commission and slippage, and shuffles historical trade outcomes to
+estimate losing-sequence risk. It reports every attempted configuration and
+does not automatically replace the baseline with the best backtest.
