@@ -70,3 +70,13 @@ python run_portfolio_test.py
 This uses the same Turtle parameters for every asset, one shared cash account,
 0.5% risk per trade, and a predeclared 2% total open-risk cap. It does not tune
 parameters or change the strategy defaults.
+
+Run the final locked-baseline stress suite:
+
+```bash
+python run_final_stress_suite.py
+```
+
+This reports the 2022 bear period, performance during high-volatility days,
+50 reproducible starting-date samples, and updated CSCV/PBO results using the
+latest downloaded data. It is diagnostic only and does not alter the strategy.

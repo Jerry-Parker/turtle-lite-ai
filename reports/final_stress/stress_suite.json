@@ -1,0 +1,527 @@
+{
+  "method": {
+    "baseline": "Locked parameters, unchanged",
+    "assets": [
+      "SPY",
+      "QQQ",
+      "AAPL",
+      "GOOGL",
+      "NVDA",
+      "SOL-USD"
+    ],
+    "data_last_dates": {
+      "SPY": "2026-07-17",
+      "QQQ": "2026-07-17",
+      "AAPL": "2026-07-17",
+      "GOOGL": "2026-07-17",
+      "NVDA": "2026-07-17",
+      "SOL-USD": "2026-07-17"
+    },
+    "high_volatility_definition": "SPY 20-day realized volatility above its trailing 252-session 75th percentile; minimum 126 sessions; no future observations used",
+    "start_date_method": "50 dates sampled without replacement; seed 20260718; at least two years remain",
+    "warning": "Historical and simulated results do not guarantee future performance."
+  },
+  "full_baseline": {
+    "start_date": "2020-04-10",
+    "end_date": "2026-07-17",
+    "annualized_return_percent": 9.26,
+    "max_drawdown_percent": 6.87,
+    "sharpe_ratio": 1.314,
+    "closed_trades": 133
+  },
+  "bear_2022": {
+    "annualized_return_percent": -1.2,
+    "max_drawdown_percent": 1.48,
+    "sharpe_ratio": -1.129,
+    "closed_trades": 3,
+    "benchmark_annualized_return_percent": -44.67,
+    "benchmark_max_drawdown_percent": 45.96
+  },
+  "high_volatility_only": {
+    "observations": 600,
+    "percent_of_days": 26.2,
+    "annualized_return_percent": 2.03,
+    "max_drawdown_percent": 5.73,
+    "sharpe_ratio": 0.483
+  },
+  "random_start_dates": {
+    "samples": 50,
+    "positive_annualized_return_percent": 100.0,
+    "annualized_return_distribution": {
+      "minimum": 0.76,
+      "p05": 1.83,
+      "median": 8.21,
+      "p95": 9.42,
+      "maximum": 9.76
+    },
+    "max_drawdown_distribution": {
+      "minimum": 5.56,
+      "p05": 6.86,
+      "median": 6.88,
+      "p95": 7.03,
+      "maximum": 7.38
+    },
+    "results": [
+      {
+        "start_date": "2020-04-10",
+        "annualized_return_percent": 9.26,
+        "max_drawdown_percent": 6.87,
+        "sharpe_ratio": 1.314,
+        "closed_trades": 133
+      },
+      {
+        "start_date": "2020-04-18",
+        "annualized_return_percent": 9.18,
+        "max_drawdown_percent": 6.9,
+        "sharpe_ratio": 1.294,
+        "closed_trades": 135
+      },
+      {
+        "start_date": "2020-06-03",
+        "annualized_return_percent": 9.28,
+        "max_drawdown_percent": 6.96,
+        "sharpe_ratio": 1.267,
+        "closed_trades": 134
+      },
+      {
+        "start_date": "2020-06-08",
+        "annualized_return_percent": 8.87,
+        "max_drawdown_percent": 6.9,
+        "sharpe_ratio": 1.217,
+        "closed_trades": 137
+      },
+      {
+        "start_date": "2020-09-01",
+        "annualized_return_percent": 7.84,
+        "max_drawdown_percent": 6.87,
+        "sharpe_ratio": 1.148,
+        "closed_trades": 134
+      },
+      {
+        "start_date": "2020-09-13",
+        "annualized_return_percent": 8.31,
+        "max_drawdown_percent": 6.88,
+        "sharpe_ratio": 1.22,
+        "closed_trades": 129
+      },
+      {
+        "start_date": "2020-10-14",
+        "annualized_return_percent": 8.63,
+        "max_drawdown_percent": 6.88,
+        "sharpe_ratio": 1.259,
+        "closed_trades": 125
+      },
+      {
+        "start_date": "2020-10-25",
+        "annualized_return_percent": 8.8,
+        "max_drawdown_percent": 6.89,
+        "sharpe_ratio": 1.277,
+        "closed_trades": 124
+      },
+      {
+        "start_date": "2020-11-12",
+        "annualized_return_percent": 8.82,
+        "max_drawdown_percent": 6.88,
+        "sharpe_ratio": 1.274,
+        "closed_trades": 123
+      },
+      {
+        "start_date": "2020-11-30",
+        "annualized_return_percent": 8.9,
+        "max_drawdown_percent": 6.88,
+        "sharpe_ratio": 1.279,
+        "closed_trades": 123
+      },
+      {
+        "start_date": "2021-02-07",
+        "annualized_return_percent": 8.91,
+        "max_drawdown_percent": 6.88,
+        "sharpe_ratio": 1.281,
+        "closed_trades": 119
+      },
+      {
+        "start_date": "2021-02-28",
+        "annualized_return_percent": 8.95,
+        "max_drawdown_percent": 6.9,
+        "sharpe_ratio": 1.297,
+        "closed_trades": 115
+      },
+      {
+        "start_date": "2021-04-20",
+        "annualized_return_percent": 8.24,
+        "max_drawdown_percent": 6.9,
+        "sharpe_ratio": 1.217,
+        "closed_trades": 113
+      },
+      {
+        "start_date": "2021-04-30",
+        "annualized_return_percent": 8.33,
+        "max_drawdown_percent": 6.92,
+        "sharpe_ratio": 1.24,
+        "closed_trades": 112
+      },
+      {
+        "start_date": "2021-05-13",
+        "annualized_return_percent": 8.64,
+        "max_drawdown_percent": 6.89,
+        "sharpe_ratio": 1.28,
+        "closed_trades": 109
+      },
+      {
+        "start_date": "2021-07-21",
+        "annualized_return_percent": 8.4,
+        "max_drawdown_percent": 6.86,
+        "sharpe_ratio": 1.24,
+        "closed_trades": 107
+      },
+      {
+        "start_date": "2021-10-12",
+        "annualized_return_percent": 6.93,
+        "max_drawdown_percent": 6.86,
+        "sharpe_ratio": 1.084,
+        "closed_trades": 98
+      },
+      {
+        "start_date": "2021-10-18",
+        "annualized_return_percent": 6.84,
+        "max_drawdown_percent": 6.91,
+        "sharpe_ratio": 1.074,
+        "closed_trades": 98
+      },
+      {
+        "start_date": "2021-11-07",
+        "annualized_return_percent": 6.5,
+        "max_drawdown_percent": 6.87,
+        "sharpe_ratio": 1.028,
+        "closed_trades": 94
+      },
+      {
+        "start_date": "2021-11-23",
+        "annualized_return_percent": 6.4,
+        "max_drawdown_percent": 6.92,
+        "sharpe_ratio": 1.019,
+        "closed_trades": 91
+      },
+      {
+        "start_date": "2022-02-18",
+        "annualized_return_percent": 7.16,
+        "max_drawdown_percent": 6.89,
+        "sharpe_ratio": 1.111,
+        "closed_trades": 88
+      },
+      {
+        "start_date": "2022-02-19",
+        "annualized_return_percent": 7.17,
+        "max_drawdown_percent": 6.89,
+        "sharpe_ratio": 1.111,
+        "closed_trades": 88
+      },
+      {
+        "start_date": "2022-04-03",
+        "annualized_return_percent": 7.53,
+        "max_drawdown_percent": 6.88,
+        "sharpe_ratio": 1.151,
+        "closed_trades": 86
+      },
+      {
+        "start_date": "2022-04-25",
+        "annualized_return_percent": 7.64,
+        "max_drawdown_percent": 6.88,
+        "sharpe_ratio": 1.16,
+        "closed_trades": 86
+      },
+      {
+        "start_date": "2022-04-26",
+        "annualized_return_percent": 7.64,
+        "max_drawdown_percent": 6.88,
+        "sharpe_ratio": 1.16,
+        "closed_trades": 86
+      },
+      {
+        "start_date": "2022-05-22",
+        "annualized_return_percent": 7.78,
+        "max_drawdown_percent": 6.88,
+        "sharpe_ratio": 1.17,
+        "closed_trades": 86
+      },
+      {
+        "start_date": "2022-05-25",
+        "annualized_return_percent": 7.79,
+        "max_drawdown_percent": 6.88,
+        "sharpe_ratio": 1.171,
+        "closed_trades": 86
+      },
+      {
+        "start_date": "2022-05-31",
+        "annualized_return_percent": 7.83,
+        "max_drawdown_percent": 6.88,
+        "sharpe_ratio": 1.173,
+        "closed_trades": 86
+      },
+      {
+        "start_date": "2022-09-28",
+        "annualized_return_percent": 8.53,
+        "max_drawdown_percent": 6.88,
+        "sharpe_ratio": 1.223,
+        "closed_trades": 86
+      },
+      {
+        "start_date": "2022-10-28",
+        "annualized_return_percent": 8.73,
+        "max_drawdown_percent": 6.88,
+        "sharpe_ratio": 1.237,
+        "closed_trades": 86
+      },
+      {
+        "start_date": "2022-12-28",
+        "annualized_return_percent": 9.16,
+        "max_drawdown_percent": 6.88,
+        "sharpe_ratio": 1.266,
+        "closed_trades": 86
+      },
+      {
+        "start_date": "2023-02-03",
+        "annualized_return_percent": 9.32,
+        "max_drawdown_percent": 6.87,
+        "sharpe_ratio": 1.277,
+        "closed_trades": 85
+      },
+      {
+        "start_date": "2023-02-10",
+        "annualized_return_percent": 9.5,
+        "max_drawdown_percent": 6.87,
+        "sharpe_ratio": 1.298,
+        "closed_trades": 84
+      },
+      {
+        "start_date": "2023-03-10",
+        "annualized_return_percent": 9.11,
+        "max_drawdown_percent": 6.86,
+        "sharpe_ratio": 1.259,
+        "closed_trades": 84
+      },
+      {
+        "start_date": "2023-03-30",
+        "annualized_return_percent": 9.68,
+        "max_drawdown_percent": 6.89,
+        "sharpe_ratio": 1.28,
+        "closed_trades": 84
+      },
+      {
+        "start_date": "2023-04-09",
+        "annualized_return_percent": 9.76,
+        "max_drawdown_percent": 6.89,
+        "sharpe_ratio": 1.277,
+        "closed_trades": 83
+      },
+      {
+        "start_date": "2023-08-05",
+        "annualized_return_percent": 8.04,
+        "max_drawdown_percent": 6.87,
+        "sharpe_ratio": 1.136,
+        "closed_trades": 73
+      },
+      {
+        "start_date": "2023-08-14",
+        "annualized_return_percent": 8.11,
+        "max_drawdown_percent": 6.87,
+        "sharpe_ratio": 1.141,
+        "closed_trades": 73
+      },
+      {
+        "start_date": "2023-08-25",
+        "annualized_return_percent": 8.19,
+        "max_drawdown_percent": 6.87,
+        "sharpe_ratio": 1.147,
+        "closed_trades": 73
+      },
+      {
+        "start_date": "2023-09-21",
+        "annualized_return_percent": 8.78,
+        "max_drawdown_percent": 6.89,
+        "sharpe_ratio": 1.211,
+        "closed_trades": 71
+      },
+      {
+        "start_date": "2023-10-30",
+        "annualized_return_percent": 9.13,
+        "max_drawdown_percent": 6.89,
+        "sharpe_ratio": 1.276,
+        "closed_trades": 67
+      },
+      {
+        "start_date": "2024-01-15",
+        "annualized_return_percent": 5.53,
+        "max_drawdown_percent": 6.87,
+        "sharpe_ratio": 0.879,
+        "closed_trades": 62
+      },
+      {
+        "start_date": "2024-01-16",
+        "annualized_return_percent": 5.53,
+        "max_drawdown_percent": 6.87,
+        "sharpe_ratio": 0.879,
+        "closed_trades": 62
+      },
+      {
+        "start_date": "2024-02-11",
+        "annualized_return_percent": 3.29,
+        "max_drawdown_percent": 6.79,
+        "sharpe_ratio": 0.59,
+        "closed_trades": 62
+      },
+      {
+        "start_date": "2024-03-26",
+        "annualized_return_percent": 4.22,
+        "max_drawdown_percent": 7.09,
+        "sharpe_ratio": 0.734,
+        "closed_trades": 55
+      },
+      {
+        "start_date": "2024-04-05",
+        "annualized_return_percent": 3.8,
+        "max_drawdown_percent": 6.87,
+        "sharpe_ratio": 0.681,
+        "closed_trades": 55
+      },
+      {
+        "start_date": "2024-04-15",
+        "annualized_return_percent": 2.65,
+        "max_drawdown_percent": 6.86,
+        "sharpe_ratio": 0.492,
+        "closed_trades": 55
+      },
+      {
+        "start_date": "2024-06-10",
+        "annualized_return_percent": 0.99,
+        "max_drawdown_percent": 7.17,
+        "sharpe_ratio": 0.203,
+        "closed_trades": 53
+      },
+      {
+        "start_date": "2024-06-22",
+        "annualized_return_percent": 0.76,
+        "max_drawdown_percent": 7.38,
+        "sharpe_ratio": 0.162,
+        "closed_trades": 52
+      },
+      {
+        "start_date": "2024-07-17",
+        "annualized_return_percent": 1.16,
+        "max_drawdown_percent": 5.56,
+        "sharpe_ratio": 0.24,
+        "closed_trades": 48
+      }
+    ]
+  },
+  "latest_pbo": [
+    {
+      "symbol": "SPY",
+      "pbo": 0.1143,
+      "oos_loss_probability": 0.2286,
+      "degradation_slope": -0.8264,
+      "is_oos_correlation": -0.7705,
+      "first_order_dominance": false,
+      "second_order_dominance": true,
+      "mintrl_passes": false,
+      "mintrl_required": 396294,
+      "mintrl_observed": 6674,
+      "regime_pbo": {
+        "bull": 0.0571,
+        "bear": 0.0,
+        "high_volatility": 0.3429,
+        "low_volatility": 0.1714
+      }
+    },
+    {
+      "symbol": "QQQ",
+      "pbo": 0.3429,
+      "oos_loss_probability": 0.0,
+      "degradation_slope": -1.0028,
+      "is_oos_correlation": -0.8667,
+      "first_order_dominance": false,
+      "second_order_dominance": true,
+      "mintrl_passes": true,
+      "mintrl_required": 4977,
+      "mintrl_observed": 6674,
+      "regime_pbo": {
+        "bull": 0.2429,
+        "bear": 0.2286,
+        "high_volatility": 0.1,
+        "low_volatility": 0.3571
+      }
+    },
+    {
+      "symbol": "AAPL",
+      "pbo": 0.2714,
+      "oos_loss_probability": 0.0,
+      "degradation_slope": -0.8866,
+      "is_oos_correlation": -0.8801,
+      "first_order_dominance": false,
+      "second_order_dominance": true,
+      "mintrl_passes": true,
+      "mintrl_required": 1250,
+      "mintrl_observed": 6674,
+      "regime_pbo": {
+        "bull": 0.3,
+        "bear": 0.1429,
+        "high_volatility": 0.4857,
+        "low_volatility": 0.1714
+      }
+    },
+    {
+      "symbol": "GOOGL",
+      "pbo": 0.2429,
+      "oos_loss_probability": 0.0571,
+      "degradation_slope": -0.8854,
+      "is_oos_correlation": -0.8547,
+      "first_order_dominance": false,
+      "second_order_dominance": true,
+      "mintrl_passes": false,
+      "mintrl_required": 10982,
+      "mintrl_observed": 5512,
+      "regime_pbo": {
+        "bull": 0.1429,
+        "bear": 0.2143,
+        "high_volatility": 0.5286,
+        "low_volatility": 0.4714
+      }
+    },
+    {
+      "symbol": "NVDA",
+      "pbo": 0.5,
+      "oos_loss_probability": 0.0,
+      "degradation_slope": -0.7011,
+      "is_oos_correlation": -0.7185,
+      "first_order_dominance": false,
+      "second_order_dominance": true,
+      "mintrl_passes": true,
+      "mintrl_required": 977,
+      "mintrl_observed": 6674,
+      "regime_pbo": {
+        "bull": 0.4857,
+        "bear": 0.0714,
+        "high_volatility": 0.1429,
+        "low_volatility": 0.1
+      }
+    },
+    {
+      "symbol": "SOL-USD",
+      "pbo": 0.6571,
+      "oos_loss_probability": 0.1571,
+      "degradation_slope": -1.0374,
+      "is_oos_correlation": -0.8222,
+      "first_order_dominance": false,
+      "second_order_dominance": false,
+      "mintrl_passes": true,
+      "mintrl_required": 984,
+      "mintrl_observed": 2290,
+      "regime_pbo": {
+        "bull": 0.9286,
+        "bear": 0.0,
+        "high_volatility": 0.2857,
+        "low_volatility": 0.3857
+      }
+    }
+  ]
+}

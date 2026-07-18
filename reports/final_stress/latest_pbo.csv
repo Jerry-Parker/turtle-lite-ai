@@ -1,0 +1,7 @@
+symbol,pbo,oos_loss_probability,degradation_slope,is_oos_correlation,first_order_dominance,second_order_dominance,mintrl_passes,mintrl_required,mintrl_observed,regime_pbo
+SPY,0.1143,0.2286,-0.8264,-0.7705,False,True,False,396294,6674,"{'bull': 0.0571, 'bear': 0.0, 'high_volatility': 0.3429, 'low_volatility': 0.1714}"
+QQQ,0.3429,0.0,-1.0028,-0.8667,False,True,True,4977,6674,"{'bull': 0.2429, 'bear': 0.2286, 'high_volatility': 0.1, 'low_volatility': 0.3571}"
+AAPL,0.2714,0.0,-0.8866,-0.8801,False,True,True,1250,6674,"{'bull': 0.3, 'bear': 0.1429, 'high_volatility': 0.4857, 'low_volatility': 0.1714}"
+GOOGL,0.2429,0.0571,-0.8854,-0.8547,False,True,False,10982,5512,"{'bull': 0.1429, 'bear': 0.2143, 'high_volatility': 0.5286, 'low_volatility': 0.4714}"
+NVDA,0.5,0.0,-0.7011,-0.7185,False,True,True,977,6674,"{'bull': 0.4857, 'bear': 0.0714, 'high_volatility': 0.1429, 'low_volatility': 0.1}"
+SOL-USD,0.6571,0.1571,-1.0374,-0.8222,False,False,True,984,2290,"{'bull': 0.9286, 'bear': 0.0, 'high_volatility': 0.2857, 'low_volatility': 0.3857}"
