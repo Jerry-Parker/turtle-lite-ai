@@ -10,15 +10,16 @@ class RecordingStrategy(TurtleLiteStrategy):
     def __init__(self):
         super().__init__()
         self.order_events = []
-        self.stop_placed_after_entry_fill = False
+        self.entry_filled = False
         self.entry_rejected = False
-        self.stop_canceled = False
+        self.stop_cancel_confirmed = False
         self.stop_fill_price = None
-        self.sell_order_count = 0
-        self.entry_completed = False
-        self.stop_pending = False
+        self.stop_fill_size = None
+        self.exit_sell_count = 0
+        self.buy_size = None
 
     def notify_order(self, order):
+        is_stop_order = order == self.stop_order
         super().notify_order(order)
 
         self.order_events.append(
@@ -28,23 +29,20 @@ class RecordingStrategy(TurtleLiteStrategy):
                 "issell": order.issell(),
                 "price": order.price,
                 "executed_price": getattr(order.executed, "price", None),
+                "size": getattr(order.executed, "size", None),
             }
         )
 
         if order.isbuy() and order.status == order.Completed:
-            self.entry_completed = True
-            self.stop_placed_after_entry_fill = self.stop_order is not None
-            self.stop_pending = self.stop_order is not None
-
-        if order.isbuy() and order.status in [order.Canceled, order.Margin, order.Rejected]:
+            self.entry_filled = True
+            self.buy_size = int(getattr(order.executed, "size", 0))
+        elif order.isbuy() and order.status in [order.Canceled, order.Margin, order.Rejected]:
             self.entry_rejected = True
 
-        if order.issell() and order.status == order.Completed:
-            self.sell_order_count += 1
+        if order.issell() and order.status == order.Completed and is_stop_order:
+            self.exit_sell_count += 1
             self.stop_fill_price = getattr(order.executed, "price", None)
-
-        if order == self.stop_order and order.status == order.Canceled:
-            self.stop_canceled = True
+            self.stop_fill_size = getattr(order.executed, "size", None)
 
 
 class TurtleLiteStrategyRiskTests(unittest.TestCase):
@@ -55,137 +53,100 @@ class TurtleLiteStrategyRiskTests(unittest.TestCase):
         cerebro.broker.setcommission(commission=0.0)
         return cerebro
 
-    def _build_data(self, prices):
+    def _build_data(self, close_prices, gap_index=None, gap_open=None, exit_index=None, exit_low=None):
+        closes = list(close_prices)
+        opens = list(close_prices)
+        highs = [price + 0.5 for price in close_prices]
+        lows = [price - 0.5 for price in close_prices]
+
+        if gap_index is not None and gap_open is not None:
+            opens[gap_index] = gap_open
+            highs[gap_index] = max(highs[gap_index], gap_open)
+            lows[gap_index] = min(lows[gap_index], gap_open)
+            closes[gap_index] = gap_open
+
+        if exit_index is not None and exit_low is not None:
+            opens[exit_index] = exit_low
+            highs[exit_index] = max(highs[exit_index], exit_low + 0.2)
+            lows[exit_index] = exit_low
+            closes[exit_index] = exit_low
+
         df = pd.DataFrame(
             {
-                "datetime": pd.date_range("2024-01-01", periods=len(prices), freq="D"),
-                "open": prices,
-                "high": [price + 0.5 for price in prices],
-                "low": [price - 0.5 for price in prices],
-                "close": prices,
+                "datetime": pd.date_range("2024-01-01", periods=len(closes), freq="D"),
+                "open": opens,
+                "high": highs,
+                "low": lows,
+                "close": closes,
                 "volume": 1000,
             }
         ).set_index("datetime")
         return bt.feeds.PandasData(dataname=df)
 
-    def test_position_size_uses_risk_pct_and_stop_distance(self):
+    def test_entry_uses_exact_position_size_from_signal_and_fill(self):
+        close_prices = [100 + i * 0.8 for i in range(250)]
         cerebro = self._build_cerebro(RecordingStrategy)
-        cerebro.adddata(self._build_data([100 + i * 0.8 for i in range(250)]))
+        cerebro.adddata(self._build_data(close_prices))
 
         strategies = cerebro.run()
         strategy = strategies[0]
 
-        self.assertTrue(strategy.entry_completed)
-        self.assertTrue(strategy.stop_placed_after_entry_fill)
-        self.assertIsNotNone(strategy.stop_order)
+        self.assertTrue(strategy.entry_filled)
+        self.assertEqual(strategy.buy_size, 19)
 
-    def test_entry_rejection_does_not_leave_orphan_stop(self):
-        cerebro = self._build_cerebro(RecordingStrategy, cash=1.0)
-        cerebro.adddata(self._build_data([100 + i * 0.8 for i in range(250)]))
+    def test_rejected_entry_does_not_create_stop(self):
+        close_prices = [100 + i * 0.05 for i in range(250)]
+        cerebro = self._build_cerebro(RecordingStrategy, cash=150.0)
+        cerebro.adddata(self._build_data(close_prices))
 
         strategies = cerebro.run()
         strategy = strategies[0]
 
-        self.assertTrue(strategy.entry_rejected or not strategy.stop_pending)
+        self.assertTrue(strategy.entry_rejected)
         self.assertIsNone(strategy.stop_order)
         self.assertIsNone(strategy.stop_price)
 
-    def test_normal_exit_cancels_existing_stop(self):
-        cerebro = self._build_cerebro(RecordingStrategy)
-        cerebro.adddata(self._build_data([100 + i * 0.8 for i in range(250)]))
+    def test_normal_exit_cancels_stop_before_exit_sell(self):
+        close_prices = [100 + i * 0.05 for i in range(250)]
+        exit_index = 205
+        exit_low = 100.0 - 0.2
+        close_prices[exit_index] = exit_low
+        cerebro = self._build_cerebro(RecordingStrategy, cash=1000.0)
+        cerebro.adddata(self._build_data(close_prices, exit_index=exit_index, exit_low=exit_low))
 
         strategies = cerebro.run()
         strategy = strategies[0]
-        strategy.stop_price = 90.0
 
-        class FakeOrder:
-            Submitted = bt.Order.Submitted
-            Accepted = bt.Order.Accepted
-            Canceled = bt.Order.Canceled
-            Completed = bt.Order.Completed
-            Rejected = bt.Order.Rejected
-            Margin = bt.Order.Margin
+        self.assertTrue(strategy.stop_cancel_confirmed)
+        self.assertTrue(strategy.exit_sell_count >= 1)
 
-            def __init__(self):
-                self.status = bt.Order.Submitted
-                self.ref = 1
-
-            def isbuy(self):
-                return False
-
-            def issell(self):
-                return True
-
-        strategy.stop_order = FakeOrder()
-        strategy._cancel_stop_order()
-
-        self.assertIsNone(strategy.stop_order)
-        self.assertIsNone(strategy.stop_price)
-
-    def test_filled_stop_does_not_trigger_second_sell(self):
-        cerebro = self._build_cerebro(RecordingStrategy)
-        cerebro.adddata(self._build_data([100 + i * 0.8 for i in range(250)]))
+    def test_stop_fill_does_not_trigger_second_sell(self):
+        close_prices = [100 + i * 0.05 for i in range(250)]
+        gap_index = 200
+        gap_open = 99.5
+        close_prices[gap_index] = gap_open
+        cerebro = self._build_cerebro(RecordingStrategy, cash=1000.0)
+        cerebro.adddata(self._build_data(close_prices, gap_index=gap_index, gap_open=gap_open))
 
         strategies = cerebro.run()
         strategy = strategies[0]
-        strategy.stop_price = 90.0
-        strategy._place_stop_loss(stop_price=90.0, size=1)
-        class FakeFilledOrder:
-            Submitted = bt.Order.Submitted
-            Accepted = bt.Order.Accepted
-            Canceled = bt.Order.Canceled
-            Completed = bt.Order.Completed
-            Rejected = bt.Order.Rejected
-            Margin = bt.Order.Margin
 
-            def __init__(self):
-                self.status = bt.Order.Completed
-                self.executed = type("Executed", (), {"price": 90.0, "size": 1})()
-                self.ref = 1
-                self.price = 90.0
+        self.assertEqual(strategy.exit_sell_count, 1)
+        self.assertEqual(strategy.stop_fill_price, 255.0)
 
-            def isbuy(self):
-                return False
-
-            def issell(self):
-                return True
-
-        strategy.notify_order(FakeFilledOrder())
-
-        self.assertEqual(strategy.sell_order_count, 1)
-
-    def test_gap_through_stop_triggers_on_executable_price(self):
-        cerebro = self._build_cerebro(RecordingStrategy)
-        cerebro.adddata(self._build_data([100 + i * 0.8 for i in range(250)]))
+    def test_gap_through_stop_uses_executable_open_price(self):
+        close_prices = [100 + i * 0.05 for i in range(250)]
+        gap_index = 200
+        gap_open = 99.5
+        close_prices[gap_index] = gap_open
+        cerebro = self._build_cerebro(RecordingStrategy, cash=1000.0)
+        cerebro.adddata(self._build_data(close_prices, gap_index=gap_index, gap_open=gap_open))
 
         strategies = cerebro.run()
         strategy = strategies[0]
-        strategy.stop_price = 90.0
-        strategy._place_stop_loss(stop_price=90.0, size=1)
-        class FakeFilledOrder:
-            Submitted = bt.Order.Submitted
-            Accepted = bt.Order.Accepted
-            Canceled = bt.Order.Canceled
-            Completed = bt.Order.Completed
-            Rejected = bt.Order.Rejected
-            Margin = bt.Order.Margin
 
-            def __init__(self):
-                self.status = bt.Order.Completed
-                self.executed = type("Executed", (), {"price": 89.0, "size": 1})()
-                self.ref = 1
-                self.price = 89.0
-
-            def isbuy(self):
-                return False
-
-            def issell(self):
-                return True
-
-        strategy.notify_order(FakeFilledOrder())
-
-        self.assertEqual(strategy.sell_order_count, 1)
-        self.assertEqual(strategy.stop_fill_price, 89.0)
+        self.assertEqual(strategy.stop_fill_price, 99.5)
+        self.assertEqual(strategy.stop_fill_size, 1)
 
 
 if __name__ == "__main__":
